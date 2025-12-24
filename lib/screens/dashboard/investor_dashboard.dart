@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
+import '../new_investment/plans_screen.dart';
+
 
 class InvestorDashboard extends StatefulWidget {
   final UserModel user;
@@ -84,7 +86,8 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
       case 1:
         return _simplePage('My Investments');
       case 2:
-        return _simplePage('New Investment Plans');
+  return const PlansScreen();
+
       case 3:
         return _simplePage('Bonds');
       case 4:

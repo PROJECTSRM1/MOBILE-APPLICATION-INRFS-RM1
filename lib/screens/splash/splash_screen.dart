@@ -9,6 +9,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  
 
   @override
   void initState() {
@@ -40,10 +41,12 @@ class _SplashScreenState extends State<SplashScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/images/inrfs_logo.png',
-                width: 250,
-              ),
+             Image.asset(
+  'assets/images/inrfs_logo.gif',
+  width: 250,
+  gaplessPlayback: true, // prevents flicker
+),
+
               const SizedBox(height: 16),
               const Text(
                 'INRFS',

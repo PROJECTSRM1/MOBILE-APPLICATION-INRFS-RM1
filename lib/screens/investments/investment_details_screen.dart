@@ -85,7 +85,7 @@ class _InvestmentDetailsScreenState
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color.blue
+                      color: Color(0xFFB87A3D),
                     ),
                   ),
                 ),

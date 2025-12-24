@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:inrfs/profile/profile_screen.dart';
+import 'package:inrfs/screens/bonds/bonds_screen.dart';
+import 'package:inrfs/screens/investments/investments_screen.dart';
+import 'package:inrfs/screens/new_investment/plans_screen.dart';
 import '../../models/user_model.dart';
-import '../new_investment/plans_screen.dart';
-
+import 'dashboard_home.dart';
 
 class InvestorDashboard extends StatefulWidget {
   final UserModel user;
@@ -31,174 +34,47 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.power_settings_new,
-              color: Colors.red,
-            ),
+            icon: const Icon(Icons.power_settings_new, color: Colors.red),
             onPressed: () {
               Navigator.pop(context); // logout
             },
           ),
         ],
       ),
-
       body: _buildBody(),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
+              icon: Icon(Icons.dashboard), label: 'Dashboard'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Investments',
-          ),
+              icon: Icon(Icons.list_alt), label: 'Investments'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle),
-            label: 'New Invest',
-          ),
+              icon: Icon(Icons.add_circle), label: 'New Invest'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Bonds',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+              icon: Icon(Icons.receipt_long), label: 'Bonds'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
 
-  // =========================
-  // BODY SWITCHER
-  // =========================
   Widget _buildBody() {
     switch (_currentIndex) {
       case 1:
-        return _simplePage('My Investments');
+        return const InvestmentsScreen();
       case 2:
-  return const PlansScreen();
-
+        return const PlansScreen();
       case 3:
-        return _simplePage('Bonds');
+        return const BondsScreen();
       case 4:
-        return _profilePage();
+        return ProfileScreen(user: widget.user);
       default:
-        return _dashboardHome();
+        return DashboardHome(user: widget.user);
     }
-  }
-
-  // =========================
-  // DASHBOARD HOME
-  // =========================
-  Widget _dashboardHome() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Welcome, ${widget.user.name}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text('Customer ID: ${widget.user.customerId}'),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Dashboard Summary',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          _summaryTile('Total Investment', '₹45,000'),
-          _summaryTile('Total Returns', '₹6,750'),
-          _summaryTile('Active Investments', '5'),
-          _summaryTile('Digital Bonds', '8'),
-        ],
-      ),
-    );
-  }
-
-  // =========================
-  // PROFILE PAGE
-  // =========================
-  Widget _profilePage() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Name'),
-            subtitle: Text(widget.user.name),
-          ),
-          ListTile(
-            leading: const Icon(Icons.phone),
-            title: const Text('Mobile'),
-            subtitle: Text(widget.user.mobile),
-          ),
-          ListTile(
-            leading: const Icon(Icons.email),
-            title: const Text('Email'),
-            subtitle: Text(widget.user.email),
-          ),
-          ListTile(
-            leading: const Icon(Icons.badge),
-            title: const Text('Customer ID'),
-            subtitle: Text(widget.user.customerId),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // =========================
-  // SIMPLE PLACEHOLDER PAGES
-  // =========================
-  Widget _simplePage(String title) {
-    return Center(
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  // =========================
-  // SUMMARY TILE
-  // =========================
-  Widget _summaryTile(String title, String value) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListTile(
-        title: Text(title),
-        trailing: Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
   }
 }

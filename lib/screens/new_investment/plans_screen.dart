@@ -247,3 +247,107 @@ class _PlanCardState extends State<PlanCard> {
     );
   }
 }
+
+/// 🔹 Helper widget (must be outside the class)
+Widget _planCard({
+  required double width,
+  required String title,
+  required String percent,
+  required String duration,
+  required List<String> points,
+  bool highlight = false,
+  String? badge,
+}) {
+  return Container(
+    width: width,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: highlight ? Colors.blue : Colors.grey.shade300,
+        width: highlight ? 2 : 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (badge != null)
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              badge,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        const SizedBox(height: 8),
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          percent,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
+        Text(
+          duration,
+          style: const TextStyle(color: Colors.grey),
+        ),
+        const SizedBox(height: 12),
+        ...points.map(
+          (p) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.check,
+                  size: 16,
+                  color: Colors.green,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    p,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+             
+            },
+            child: const Text('Select Plan'),
+          ),
+        ),
+      ],
+    ),
+  );
+}

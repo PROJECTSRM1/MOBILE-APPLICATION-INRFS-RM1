@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
+import 'investment_details_screen.dart';
 
 class InvestmentsScreen extends StatelessWidget {
   const InvestmentsScreen({super.key});
@@ -13,60 +14,113 @@ class InvestmentsScreen extends StatelessWidget {
         itemCount: investments.length,
         itemBuilder: (context, index) {
           final i = investments[index];
-          return _investmentCard(i);
+          return _investmentCard(context, i);
         },
       ),
     );
   }
 
-  Widget _investmentCard(dynamic i) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Investment ID
-            Text(
-              i.id,
-              style: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
+  // ---------------- Investment Card ----------------
+
+  Widget _investmentCard(BuildContext context, dynamic i) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _openDetails(context, i),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Investment ID
+              Text(
+                i.id,
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            _row('Plan', i.plan),
-            _row('Amount', '₹${i.amount}'),
-            _row(
-              'Returns',
-              '₹${i.returns}',
-              valueColor: Colors.green,
-            ),
-            _row(
-              'Status',
-              i.isActive ? 'Active' : 'Completed',
-              chip: true,
-              chipColor: i.isActive ? Colors.green : Colors.blue,
-            ),
-            _row('Maturity', i.maturity),
-          ],
+              _row('Plan', i.plan),
+              _row('Amount', '₹${i.amount}'),
+              _row(
+                'Returns',
+                '₹${i.returns}',
+                valueColor: Colors.green,
+              ),
+
+              // Status Chip (Clickable)
+              _statusRow(context, i),
+
+              _row('Maturity', i.maturity),
+
+              // Withdraw Button (Active only)
+              if (i.isActive) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _openDetails(context, i),
+                    child: const Text('Withdraw'),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // ---------------- Status Row ----------------
+
+  Widget _statusRow(BuildContext context, dynamic i) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          const Expanded(
+            flex: 3,
+            child: Text(
+              'Status',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: () => _openDetails(context, i),
+                child: Chip(
+                  label: Text(
+                    i.isActive ? 'Active' : 'Completed',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor:
+                      i.isActive ? Colors.green : Colors.blue,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- Row UI ----------------
+
   Widget _row(
     String title,
     String value, {
-    bool chip = false,
-    Color? chipColor,
     Color? valueColor,
   }) {
     return Padding(
@@ -82,27 +136,27 @@ class InvestmentsScreen extends StatelessWidget {
           ),
           Expanded(
             flex: 5,
-            child: chip
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: Chip(
-                      label: Text(
-                        value,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: chipColor,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  )
-                : Text(
-                    value,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: valueColor,
-                    ),
-                  ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: valueColor,
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ---------------- Navigation ----------------
+
+  void _openDetails(BuildContext context, dynamic investment) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            InvestmentDetailsScreen(investment: investment),
       ),
     );
   }

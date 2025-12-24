@@ -23,6 +23,7 @@ class _CompleteInvestmentScreenState
   double investmentAmount = 0;
   double expectedReturns = 0;
   double totalMaturity = 0;
+
   bool agreed = false;
 
   void _calculate() {
@@ -37,6 +38,36 @@ class _CompleteInvestmentScreenState
     setState(() {});
   }
 
+  // =========================
+  // TERMS POPUP (TEXT ONLY)
+  // =========================
+  void _showTermsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Terms & Conditions'),
+        content: SingleChildScrollView(
+          child: const Text(
+            '1. Investment is locked for the selected tenure period.\n'
+            '2. Returns are calculated based on the fixed interest rate.\n'
+            '3. Digital bond will be issued immediately after payment confirmation.\n'
+            '4. Early withdrawal may incur penalties as per policy.\n'
+            '5. All investments are subject to regulatory compliance.\n'
+            '6. Interest is calculated on a simple interest basis.\n'
+            '7. Maturity amount will be credited to your registered account.',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,6 +76,7 @@ class _CompleteInvestmentScreenState
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -68,9 +100,8 @@ class _CompleteInvestmentScreenState
                 children: [
                   Text(
                     'Selected Plan: ${widget.planName}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style:
+                        const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -88,34 +119,24 @@ class _CompleteInvestmentScreenState
             // =========================
             const Text(
               'Investment Amount',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                prefixText: '\$ ',
+                prefixText: '₹ ',
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: (_) => _calculate(),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Minimum: \$1,000 | Maximum: \$1,000,000',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
 
             const SizedBox(height: 20),
 
             // =========================
-            // CALCULATED RETURNS (SEPARATE ROW)
+            // CALCULATED RETURNS
             // =========================
             Container(
               width: double.infinity,
@@ -135,7 +156,7 @@ class _CompleteInvestmentScreenState
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '\$${expectedReturns.toStringAsFixed(2)}',
+                    '₹${expectedReturns.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -144,7 +165,7 @@ class _CompleteInvestmentScreenState
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Total Maturity: \$${totalMaturity.toStringAsFixed(2)}',
+                    'Total Maturity: ₹${totalMaturity.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
@@ -161,17 +182,15 @@ class _CompleteInvestmentScreenState
             // =========================
             const Text(
               'Investment Summary',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style:
+                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
             _summaryRow('Plan Type', widget.planName),
             _summaryRow(
               'Investment Amount',
-              '\$${investmentAmount.toStringAsFixed(0)}',
+              '₹${investmentAmount.toStringAsFixed(0)}',
             ),
             _summaryRow(
               'Interest Rate',
@@ -179,15 +198,15 @@ class _CompleteInvestmentScreenState
             ),
             _summaryRow(
               'Expected Returns',
-              '\$${expectedReturns.toStringAsFixed(2)}',
+              '₹${expectedReturns.toStringAsFixed(2)}',
               valueColor: Colors.green,
             ),
 
             const Divider(height: 32),
 
             _summaryRow(
-              'Total Maturity Amount:',
-              '\$${totalMaturity.toStringAsFixed(2)}',
+              'Total Maturity Amount',
+              '₹${totalMaturity.toStringAsFixed(2)}',
               bold: true,
               valueColor: Colors.blue,
             ),
@@ -197,41 +216,22 @@ class _CompleteInvestmentScreenState
             // =========================
             // TERMS & CONDITIONS
             // =========================
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
+            TextButton(
+              onPressed: () => _showTermsDialog(context),
+              child: const Text(
+                'Terms & Conditions',
+                style:
+                    TextStyle(decoration: TextDecoration.underline),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Terms & Conditions',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '1. Investment is locked for the selected tenure period.\n'
-                    '2. Returns are calculated based on the fixed interest rate.\n'
-                    '3. Digital bond will be issued immediately after payment confirmation.\n'
-                    '4. Early withdrawal may incur penalties as per policy.\n'
-                    '5. All investments are subject to regulatory compliance.\n'
-                    '6. Interest is calculated on a simple interest basis.\n'
-                    '7. Maturity amount will be credited to your registered account.',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: agreed,
-                    onChanged: (v) => setState(() => agreed = v!),
-                    title: const Text(
-                      'I have read and agree to the Terms & Conditions',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
+            ),
+
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: agreed,
+              onChanged: (v) => setState(() => agreed = v!),
+              title: const Text(
+                'I agree to the Terms & Conditions',
+                style: TextStyle(fontSize: 12),
               ),
             ),
 

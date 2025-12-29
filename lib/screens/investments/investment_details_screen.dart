@@ -166,7 +166,6 @@ class _InvestmentDetailsScreenState
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // TODO: Withdraw logic
                             },
                             child:
                                 const Text('Withdraw Investment'),
@@ -177,7 +176,6 @@ class _InvestmentDetailsScreenState
                           width: double.infinity,
                           child: OutlinedButton(
                             onPressed: () {
-                              // TODO: Change plan logic
                             },
                             child: const Text('Change Plan'),
                           ),

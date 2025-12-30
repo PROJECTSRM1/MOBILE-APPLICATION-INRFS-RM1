@@ -99,7 +99,7 @@ class PlansScreen extends StatelessWidget {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-/// 🔹 PLAN CARD (SINGLE SOURCE OF TRUTH)
+/// 🔹 PLAN CARD WITH HOVER EFFECT (FOR ALL CARDS)
 //////////////////////////////////////////////////////////////////////////////
 class PlanCard extends StatefulWidget {
   final double width;
@@ -147,10 +147,8 @@ class _PlanCardState extends State<PlanCard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered || widget.highlight
-                ? Colors.blue
-                : Colors.grey.shade300,
-            width: _isHovered || widget.highlight ? 2 : 1,
+            color: _isHovered ? Colors.blue : Colors.grey.shade300,
+            width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(

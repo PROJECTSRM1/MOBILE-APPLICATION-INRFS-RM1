@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../auth/otp_verification_screen.dart';
@@ -83,6 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // 🔹 Background Image
           Image.asset(
             'assets/images/share1.jpg',
             fit: BoxFit.cover,
@@ -92,149 +95,162 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Container(
-                width: 380,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 20,
-                      offset: Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Create Your Account',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: Container(
+                    width: 380,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: firstNameCtrl,
-                            decoration: _inputStyle('First Name'),
+                        const Text(
+                          'Create Your Account',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: lastNameCtrl,
-                            decoration: _inputStyle('Last Name'),
-                          ),
+
+                        const SizedBox(height: 24),
+
+                        _glassField(
+                          controller: firstNameCtrl,
+                          label: 'First Name',
                         ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
-                    TextField(
-                      controller: emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: _inputStyle(
-                        'Email Address',
-                        hint: 'john.doe@example.com',
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: mobileCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: _inputStyle(
-                        'Mobile Number',
-                        hint: '9876543210',
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: passwordCtrl,
-                      obscureText: true,
-                      decoration: _inputStyle('Password'),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: confirmPasswordCtrl,
-                      obscureText: true,
-                      decoration: _inputStyle('Confirm Password'),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: agree,
-                          onChanged: (v) {
-                            setState(() => agree = v ?? false);
-                          },
+                        _glassField(
+                          controller: lastNameCtrl,
+                          label: 'Last Name',
                         ),
-                        const Expanded(
-                          child: Text(
-                            'I agree to the Terms & Conditions and Privacy Policy',
-                            style: TextStyle(fontSize: 13),
-                          ),
+
+                        const SizedBox(height: 14),
+
+                        _glassField(
+                          controller: emailCtrl,
+                          label: 'Email Address',
+                          keyboardType: TextInputType.emailAddress,
                         ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 20),
+                        const SizedBox(height: 14),
 
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: agree && !loading ? _register : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                        _glassField(
+                          controller: mobileCtrl,
+                          label: 'Mobile Number',
+                          keyboardType: TextInputType.phone,
                         ),
-                        child: loading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Register & Verify',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 14),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Already have an account? '),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Text(
-                            'Login here',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
+                        _glassField(
+                          controller: passwordCtrl,
+                          label: 'Password',
+                          obscure: true,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        _glassField(
+                          controller: confirmPasswordCtrl,
+                          label: 'Confirm Password',
+                          obscure: true,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: agree,
+                              activeColor: Colors.white,
+                              checkColor: Colors.black,
+                              onChanged: (v) {
+                                setState(() => agree = v ?? false);
+                              },
                             ),
+                            const Expanded(
+                              child: Text(
+                                'I agree to the Terms & Conditions and Privacy Policy',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed:
+                                agree && !loading ? _register : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color(0xFFB87A3D),
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: loading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Register & Verify',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account? ',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Text(
+                                'Login here',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -250,14 +266,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  static InputDecoration _inputStyle(String label, {String? hint}) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+  // 🔹 Glass TextField
+  Widget _glassField({
+    required TextEditingController controller,
+    required String label,
+    bool obscure = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }

@@ -8,12 +8,12 @@ class BondsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      // backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text("Bonds"),
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: Colors.black,
+        // foregroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

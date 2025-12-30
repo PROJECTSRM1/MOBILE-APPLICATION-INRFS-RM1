@@ -251,7 +251,7 @@ class _DashboardHomeState extends State<DashboardHome> {
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor:
-                investment['active'] ? const Color(0xFF10B981) : const Color(0xFFC5A572),
+                investment['active'] ? const Color.fromARGB(255, 85, 29, 15) : const Color(0xFFC5A572),
           ),
         ],
       ),

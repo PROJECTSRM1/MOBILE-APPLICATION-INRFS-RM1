@@ -39,10 +39,9 @@ class _LoginScreenState extends State<LoginScreen> {
             fit: BoxFit.cover,
           ),
 
-          // 🔹 Dark overlay
-          Container(
-            color: Colors.black.withValues(alpha: 0.45),
-          ),
+          // 🔹 Dark Overlay
+          Container(color: Colors.black.withValues(alpha: 0.4)
+),
 
           Center(
             child: SingleChildScrollView(
@@ -224,9 +223,8 @@ class _LoginScreenState extends State<LoginScreen> {
         identifier: identifier,
         password: password,
       );
-
-      if (!mounted) return;
-
+ if (!mounted) return; 
+      // Adjust keys if backend response differs
       final user = UserModel(
         name: res['name'] ?? '',
         email: res['email'] ?? '',

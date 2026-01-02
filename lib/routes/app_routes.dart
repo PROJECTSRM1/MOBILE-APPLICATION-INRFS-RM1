@@ -1,17 +1,7 @@
-import 'package:flutter/material.dart';
-
-import '../screens/splash/splash_screen.dart';
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/register_screen.dart';
-
 class AppRoutes {
-  static const splash = '/';
-  static const login = '/login';
-  static const register = '/register';
-
-  static Map<String, WidgetBuilder> routes = {
-    splash: (context) => const SplashScreen(),
-    login: (context) => const LoginScreen(),
-    register: (context) => const RegisterScreen(),
-  };
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String otp = '/otp';
+  static const String dashboard = '/dashboard';
 }

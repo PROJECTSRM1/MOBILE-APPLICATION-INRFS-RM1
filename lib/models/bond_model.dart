@@ -1,28 +1,21 @@
 class BondModel {
-  final String name;
-  final double amount;
-  final double interest;
-  final int tenure;
+  final String bondId;
+  final String planName;
+  final double investedAmount;
+  final double maturityValue;
+  final String tenure;
+  final String interest;
   final String status;
-  final String rating;
-  final String issuer;
-  final String ipoDate;
-  final List<String> pros;
-  final List<String> cons;
-  final String about;
-
+  final String date;
 
   BondModel({
-    required this.name,
-    required this.amount,
-    required this.interest,
+    required this.bondId,
+    required this.planName,
+    required this.investedAmount,
+    required this.maturityValue,
     required this.tenure,
+    required this.interest,
     required this.status,
-    required this.rating,
-    required this.issuer,
-    required this.ipoDate,
-    required this.pros,
-    required this.cons,
-    required this.about,
+    required this.date,
   });
 }

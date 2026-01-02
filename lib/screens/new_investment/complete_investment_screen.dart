@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../bonds/bonds_screen.dart';
+import '../../models/bond_model.dart';
+import '../bonds/bonds_data.dart';
+
 
 class CompleteInvestmentScreen extends StatefulWidget {
   final String planName;
@@ -72,190 +75,6 @@ class _CompleteInvestmentScreenState
       ),
     );
   }
-void _showProcessingPopup() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text(
-                'Processing Payment...',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-void _showPaymentSuccessPopup() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-
-              const Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 64,
-              ),
-              const SizedBox(height: 12),
-
-              const Text(
-                'Payment Successful',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                'Your investment has been successfully processed.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13),
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // close success popup
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BondsScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('View Bond'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-void _startPaymentProcess() {
-  Navigator.pop(context); // close payment options popup
-
-  _showProcessingPopup();
-
-  Future.delayed(const Duration(seconds: 2), () {
-    if (!mounted) return;
-
-    Navigator.pop(context); // close processing popup
-    _showPaymentSuccessPopup();
-  });
-}
-
-  // =========================
-  // PAYMENT MODAL
-  // =========================
- void _showPaymentSheet() {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    barrierColor: Colors.black.withValues(alpha: 0.4),
-    builder: (_) {
-      return Center(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            constraints: const BoxConstraints(maxWidth: 380),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Complete Payment',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _paymentInfoRow('Plan Type', widget.planName),
-                  _paymentInfoRow(
-                    'Amount to Pay',
-                    '₹${investmentAmount.toStringAsFixed(0)}',
-                    bold: true,
-                  ),
-                  _paymentInfoRow(
-                    'Expected Returns',
-                    '₹${expectedReturns.toStringAsFixed(0)}',
-                    valueColor: Colors.green,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                 _paymentButton(
-  icon: Icons.credit_card,
-  text: 'Pay with Stripe',
-  onTap:_startPaymentProcess,
-),
-
-                 _paymentButton(
-  icon: Icons.account_balance_wallet,
-  text: 'Pay with PayPal',
-  onTap: _startPaymentProcess,
-),
-
-                 _paymentButton(
-  icon: Icons.account_balance,
-  text: 'Bank Transfer',
-  onTap: _handlePaymentSuccess,
-),
-
-
-                  const SizedBox(height: 12),
 
   // =========================
   // PAYMENT MODAL (GLASS UI)
@@ -341,30 +160,45 @@ void _startPaymentProcess() {
   // =========================
   // PROCESS PAYMENT (FAKE)
   // =========================
-  void _processPayment() {
-    Navigator.pop(context); // close payment modal
+ void _processPayment() {
+  Navigator.pop(context); // close payment modal
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  Future.delayed(const Duration(seconds: 2), () {
+    if (!mounted) return;
+
+    Navigator.pop(context); // close loader
+
+    // ✅ ADD BOND TO LIST
+    bondsList.insert(
+      0,
+      BondModel(
+        bondId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+        planName: widget.planName,
+        investedAmount: investmentAmount,
+        maturityValue: totalMaturity,
+        tenure: '${(widget.interestRate == 18 ? 6 : 3)} Months',
+        interest: '${widget.interestRate}% p.a.',
+        status: 'Active',
+        date: DateTime.now().toString().split(' ').first,
       ),
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-
-      Navigator.pop(context); // close loader
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const BondsScreen(),
-        ),
-      );
-    });
-  }
+    // ✅ NAVIGATE TO BONDS
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const BondsScreen()),
+      (route) => false,
+    );
+  });
+}
 
   // =========================
   // UI

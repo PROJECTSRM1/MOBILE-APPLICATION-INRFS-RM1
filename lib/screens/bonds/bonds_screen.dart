@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import '../../data/bonds_store.dart';
+import '../../data/investment_store.dart';
 
 class BondsScreen extends StatelessWidget {
   const BondsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final bonds = InvestmentStore.bonds; // ✅ READ HERE
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Investment Bonds'),
       ),
-      body: bondsList.isEmpty
+      body: bonds.isEmpty
           ? _emptyState()
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: bondsList.length,
+              itemCount: bonds.length,
               itemBuilder: (context, index) {
-                final bond = bondsList[index];
+                final bond = bonds[index];
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),

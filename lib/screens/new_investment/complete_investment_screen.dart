@@ -2,7 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../bonds/bonds_screen.dart';
 import '../../models/bond_model.dart';
-import '../bonds/bonds_data.dart';
+// import '../bonds/bonds_data.dart';
+import '../../data/investment_store.dart';
 
 
 class CompleteInvestmentScreen extends StatefulWidget {
@@ -166,9 +167,7 @@ class _CompleteInvestmentScreenState
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(
-      child: CircularProgressIndicator(),
-    ),
+    builder: (_) => const Center(child: CircularProgressIndicator()),
   );
 
   Future.delayed(const Duration(seconds: 2), () {
@@ -176,29 +175,39 @@ class _CompleteInvestmentScreenState
 
     Navigator.pop(context); // close loader
 
-    // ✅ ADD BOND TO LIST
-    bondsList.insert(
-      0,
-      BondModel(
-        bondId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
-        planName: widget.planName,
-        investedAmount: investmentAmount,
-        maturityValue: totalMaturity,
-        tenure: '${(widget.interestRate == 18 ? 6 : 3)} Months',
-        interest: '${widget.interestRate}% p.a.',
-        status: 'Active',
-        date: DateTime.now().toString().split(' ').first,
-      ),
+    final bond = BondModel(
+      bondId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+      planName: widget.planName,
+      investedAmount: investmentAmount,
+      maturityValue: totalMaturity,
+      tenure: '3 Months',
+      interest: '${widget.interestRate}% p.a.',
+      status: 'Active',
+      date: DateTime.now().toString().split(' ').first,
     );
 
-    // ✅ NAVIGATE TO BONDS
+    // ✅ ADD TO GLOBAL STORE
+    InvestmentStore.bonds.insert(0, bond);
+
+    InvestmentStore.investments.insert(0, {
+      'id': bond.bondId,
+      'plan': bond.planName,
+      'amount': investmentAmount,
+      'returns': expectedReturns,
+      'maturity': totalMaturity,
+      'status': 'Active',
+      'date': bond.date,
+    });
+
+    // ✅ NAVIGATE
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const BondsScreen()),
-      (route) => false,
+      (_) => false,
     );
   });
 }
+
 
   // =========================
   // UI

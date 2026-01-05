@@ -25,40 +25,81 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
+        elevation: 0,
+
+        /// 🔥 GRADIENT APPBAR
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF8B6E4E), // gold-brown
+                Color(0xFFA38655), // premium gold
+              ],
+            ),
+          ),
+        ),
+
         title: Row(
           children: const [
-            Icon(Icons.trending_up),
+            Icon(Icons.trending_up, color: Colors.white),
             SizedBox(width: 8),
-            Text('INRFS'),
+            Text(
+              'INRFS',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.power_settings_new, color: Colors.red),
+            icon: const Icon(
+              Icons.power_settings_new,
+              color: Colors.redAccent,
+            ),
             onPressed: () {
               Navigator.pop(context); // logout
             },
           ),
         ],
       ),
+
       body: _buildBody(),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF8B6E4E),
+        unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() => _currentIndex = index);
         },
         items: const [
           BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard), label: 'Dashboard'),
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.list_alt), label: 'Investments'),
+            icon: Icon(Icons.list_alt),
+            label: 'Investments',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle), label: 'New Invest'),
+            icon: Icon(Icons.add_circle),
+            label: 'New Invest',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long), label: 'Bonds'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            icon: Icon(Icons.receipt_long),
+            label: 'Bonds',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -67,7 +108,8 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
   Widget _buildBody() {
     switch (_currentIndex) {
       case 1:
-        return const InvestmentsScreen();
+        return InvestmentsScreen();
+
       case 2:
         return const PlansScreen();
       case 3:

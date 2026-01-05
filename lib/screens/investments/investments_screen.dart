@@ -41,7 +41,7 @@ class InvestmentsScreen extends StatelessWidget {
               Text(
                 i.id,
                 style: const TextStyle(
-                  color: Colors.blue,
+                  color: Color.fromARGB(255, 234, 170, 254),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -117,7 +117,7 @@ class InvestmentsScreen extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                   ),
                   backgroundColor:
-                      i.isActive ? Colors.green : Colors.blue,
+                      i.isActive ? const Color.fromARGB(255, 235, 177, 54) : const Color.fromARGB(255, 228, 168, 240),
                   visualDensity: VisualDensity.compact,
                 ),
               ),

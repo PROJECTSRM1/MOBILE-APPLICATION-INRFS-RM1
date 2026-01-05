@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../models/plan_model.dart';
 import '../../services/plan_service.dart';
 import 'complete_investment_screen.dart';
@@ -22,63 +21,63 @@ class _PlansScreenState extends State<PlansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose Your Investment Plan'),
-        centerTitle: true,
-      ),
-      body: FutureBuilder<List<PlanModel>>(
-        future: _plansFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return FutureBuilder<List<PlanModel>>(
+      future: _plansFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                snapshot.error.toString(),
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          final plans = snapshot.data!;
-          if (plans.isEmpty) {
-            return const Center(child: Text('No plans available'));
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: plans.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (_, index) {
-              return _PlanCard(plan: plans[index]);
-            },
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              snapshot.error.toString(),
+              style: const TextStyle(color: Colors.red),
+            ),
           );
-        },
-      ),
+        }
+
+        final plans = snapshot.data ?? [];
+
+        if (plans.isEmpty) {
+          return const Center(child: Text('No plans available'));
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: plans.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (_, index) {
+            return _PlanCard(plan: plans[index]);
+          },
+        );
+      },
     );
   }
 }
 
 //////////////////////////////////////////////////////////////////////////////
-/// PLAN CARD (VERTICAL)
+/// PLAN CARD (UPDATED – WITH DESCRIPTION)
 //////////////////////////////////////////////////////////////////////////////
 
 class _PlanCard extends StatelessWidget {
   final PlanModel plan;
   const _PlanCard({required this.plan});
 
+  /// Convert "15 %" → 15.0
+  double _parsePercentage(String value) {
+    return double.tryParse(value.replaceAll('%', '').trim()) ?? 0.0;
+  }
+
   Color get _backgroundColor {
-    if (plan.durationMonths <= 1) {
-      return const Color(0xFFFFF6E5);
-    } else if (plan.durationMonths <= 3) {
+    if (plan.duration.contains('3')) {
       return const Color(0xFFFFF0D6);
-    } else if (plan.durationMonths <= 6) {
+    } else if (plan.duration.contains('6')) {
       return const Color(0xFFEAF7EE);
-    } else {
+    } else if (plan.duration.contains('12')) {
       return const Color(0xFFFFECEC);
+    } else {
+      return const Color(0xFFFFF6E5);
     }
   }
 
@@ -102,7 +101,7 @@ class _PlanCard extends StatelessWidget {
         children: [
           /// PLAN NAME
           Text(
-            plan.name,
+            plan.planType,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -113,7 +112,7 @@ class _PlanCard extends StatelessWidget {
 
           /// ROI
           Text(
-            '${plan.returnsPercentage}%',
+            plan.percentage,
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -121,22 +120,40 @@ class _PlanCard extends StatelessWidget {
             ),
           ),
 
+          /// DURATION
           Text(
-            'Returns in ${plan.durationMonths} months',
+            'Duration: ${plan.duration}',
             style: const TextStyle(color: Colors.grey),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          /// DESCRIPTION
+          /// DESCRIPTION (NEW)
           Text(
             plan.description,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF555555),
+              height: 1.4,
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          /// STATUS
+          Chip(
+            label: Text(
+              plan.isActive ? 'Active' : 'Inactive',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: plan.isActive
+                ? const Color.fromARGB(255, 169, 144, 70)
+                : Colors.grey,
           ),
 
           const SizedBox(height: 20),
 
-          /// BUTTON
+          /// SELECT BUTTON
           SizedBox(
             width: double.infinity,
             height: 46,
@@ -147,17 +164,20 @@ class _PlanCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CompleteInvestmentScreen(
-                      planName: plan.name,
-                      interestRate: plan.returnsPercentage,
-                    ),
-                  ),
-                );
-              },
+              onPressed: plan.isActive
+                  ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CompleteInvestmentScreen(
+                            planName: plan.planType,
+                            interestRate:
+                                _parsePercentage(plan.percentage),
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
               child: const Text(
                 'Select Plan',
                 style: TextStyle(

@@ -1,29 +1,28 @@
 class PlanModel {
   final int id;
-  final String name;
-  final double returnsPercentage;
-  final int durationMonths;
-  final String description;
+  final String planType;
+  final String percentage;
+  final String duration;
   final bool isActive;
+  final String description;
 
   PlanModel({
     required this.id,
-    required this.name,
-    required this.returnsPercentage,
-    required this.durationMonths,
-    required this.description,
+    required this.planType,
+    required this.percentage,
+    required this.duration,
     required this.isActive,
+    required this.description,
   });
 
   factory PlanModel.fromJson(Map<String, dynamic> json) {
     return PlanModel(
-      id: json['id'],
-      name: json['name'],
-      returnsPercentage:
-          (json['returns_percentage'] as num).toDouble(),
-      durationMonths: json['duration_months'],
-      description: json['description'],
-      isActive: json['is_active'],
+      id: json['id'] ?? 0,
+      planType: json['plan_type'] ?? '',
+      percentage: json['percentage'] ?? '',
+      duration: json['duration'] ?? '',
+      isActive: json['is_active'] ?? false,
+      description: json['description'] ?? '',
     );
   }
 }

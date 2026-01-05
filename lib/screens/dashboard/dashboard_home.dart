@@ -1,7 +1,4 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../models/user_model.dart';
 
 class DashboardHome extends StatefulWidget {
@@ -17,13 +14,6 @@ class DashboardHome extends StatefulWidget {
 }
 
 class _DashboardHomeState extends State<DashboardHome> {
-  /// -----------------------------
-  /// MOCK SENSEX DATA (REALTIME-LIKE)
-  /// -----------------------------
-  final List<FlSpot> _sensexPoints = [];
-  Timer? _timer;
-  double _currentSensex = 72000;
-
   /// -----------------------------
   /// DUMMY INVESTMENT DATA
   /// -----------------------------
@@ -49,40 +39,6 @@ class _DashboardHomeState extends State<DashboardHome> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _startSensexSimulation();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  /// -----------------------------
-  /// FAKE REALTIME SENSEX
-  /// -----------------------------
-  void _startSensexSimulation() {
-    for (int i = 0; i < 10; i++) {
-      _sensexPoints.add(FlSpot(i.toDouble(), _currentSensex));
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
-      setState(() {
-        _currentSensex += Random().nextDouble() * 40 - 20;
-        _sensexPoints.add(
-          FlSpot(_sensexPoints.length.toDouble(), _currentSensex),
-        );
-
-        if (_sensexPoints.length > 20) {
-          _sensexPoints.removeAt(0);
-        }
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final totalInvested =
         investments.fold<int>(0, (sum, i) => sum + i['amount'] as int);
@@ -98,27 +54,24 @@ class _DashboardHomeState extends State<DashboardHome> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// -----------------------------
-          /// HEADER
-          /// -----------------------------
-          Text(
-            'Welcome Back, ${widget.user.name}',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          Text('Customer ID: ${widget.user.customerId}'),
+        /// HEADER
+Text(
+  'Welcome Back, ${widget.user.name}',
+  style: const TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+  ),
+),
+const SizedBox(height: 4),
+Text(
+  'Customer ID: ${widget.user.customerId}',
+  style: const TextStyle(
+    color: Colors.grey,
+  ),
+),
 
-          const SizedBox(height: 20),
 
-          /// -----------------------------
-          /// SENSEX GRAPH
-          /// -----------------------------
-          _sensexCard(),
-
-          const SizedBox(height: 20),
-
-          /// -----------------------------
           /// SUMMARY CARDS
-          /// -----------------------------
           Row(
             children: [
               _summaryCard(
@@ -159,9 +112,7 @@ class _DashboardHomeState extends State<DashboardHome> {
 
           const SizedBox(height: 24),
 
-          /// -----------------------------
           /// INVESTMENT LIST
-          /// -----------------------------
           const Text(
             'Your Investments',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -174,57 +125,7 @@ class _DashboardHomeState extends State<DashboardHome> {
     );
   }
 
-  /// -----------------------------
-  /// SENSEX CARD
-  /// -----------------------------
-  Widget _sensexCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _boxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'SENSEX (Live)',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _currentSensex.toStringAsFixed(2),
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF10B981),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                titlesData: FlTitlesData(show: false),
-                gridData: FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: _sensexPoints,
-                    isCurved: true,
-                    dotData: FlDotData(show: false),
-                    barWidth: 3,
-                    color: const Color(0xFF10B981),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// -----------------------------
   /// INVESTMENT CARD
-  /// -----------------------------
   Widget _investmentCard(Map<String, dynamic> investment) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -250,17 +151,16 @@ class _DashboardHomeState extends State<DashboardHome> {
               investment['active'] ? 'ACTIVE' : 'CLOSED',
               style: const TextStyle(color: Colors.white),
             ),
-            backgroundColor:
-                investment['active'] ? const Color.fromARGB(255, 85, 29, 15) : const Color(0xFFC5A572),
+            backgroundColor: investment['active']
+                ? const Color.fromARGB(255, 85, 29, 15)
+                : const Color(0xFFC5A572),
           ),
         ],
       ),
     );
   }
 
-  /// -----------------------------
   /// SUMMARY CARD
-  /// -----------------------------
   Expanded _summaryCard(
     String title,
     String value,

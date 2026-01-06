@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../bonds/bonds_screen.dart';
-import '../../models/bond_model.dart';
-import '../bonds/bonds_data.dart';
+// import '../../models/bond_model.dart';
+// import '../bonds/bonds_data.dart';
+import '../../data/investment_store.dart';
+import '../../models/investment.dart';
 
 
 class CompleteInvestmentScreen extends StatefulWidget {
@@ -161,41 +163,39 @@ class _CompleteInvestmentScreenState
   // PROCESS PAYMENT (FAKE)
   // =========================
  void _processPayment() {
-  Navigator.pop(context); // close payment modal
+  Navigator.pop(context);
 
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(
-      child: CircularProgressIndicator(),
-    ),
+    builder: (_) => const Center(child: CircularProgressIndicator()),
   );
 
   Future.delayed(const Duration(seconds: 2), () {
     if (!mounted) return;
 
-    Navigator.pop(context); // close loader
+    Navigator.pop(context);
 
-    // ✅ ADD BOND TO LIST
-    bondsList.insert(
-      0,
-      BondModel(
-        bondId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
-        planName: widget.planName,
-        investedAmount: investmentAmount,
-        maturityValue: totalMaturity,
-        tenure: '${(widget.interestRate == 18 ? 6 : 3)} Months',
-        interest: '${widget.interestRate}% p.a.',
-        status: 'Active',
-        date: DateTime.now().toString().split(' ').first,
-      ),
+    final investment = Investment(
+      investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+      planName: widget.planName,
+      investedAmount: investmentAmount,
+      returns: expectedReturns,
+      maturityValue: totalMaturity,
+      tenure: '3 Months',
+      interest: '${widget.interestRate}% p.a.',
+      status: 'Active',
+      date: DateTime.now(),
     );
 
-    // ✅ NAVIGATE TO BONDS
+    /// ✅ INSERT ONLY INVESTMENT (SINGLE SOURCE OF TRUTH)
+    InvestmentStore.investments.insert(0, investment);
+
+    /// ✅ NAVIGATE
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const BondsScreen()),
-      (route) => false,
+      (_) => false,
     );
   });
 }

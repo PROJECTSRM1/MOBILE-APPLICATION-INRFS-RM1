@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
+import '../../data/investment_store.dart';
+import '../../models/investment.dart';
 
 class DashboardHome extends StatefulWidget {
   final UserModel user;
@@ -14,119 +16,111 @@ class DashboardHome extends StatefulWidget {
 }
 
 class _DashboardHomeState extends State<DashboardHome> {
-  /// -----------------------------
-  /// DUMMY INVESTMENT DATA
-  /// -----------------------------
-  final List<Map<String, dynamic>> investments = [
-    {
-      'plan': 'Growth Plan',
-      'amount': 10000,
-      'returns': 1800,
-      'active': true,
-    },
-    {
-      'plan': 'Income Plan',
-      'amount': 5000,
-      'returns': 600,
-      'active': true,
-    },
-    {
-      'plan': 'Secure Bond',
-      'amount': 20000,
-      'returns': 4800,
-      'active': false,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final totalInvested =
-        investments.fold<int>(0, (sum, i) => sum + i['amount'] as int);
+    /// ✅ READ INVESTMENTS FROM STORE
+    final List<Investment> investments = InvestmentStore.investments;
 
-    final totalReturns =
-        investments.fold<int>(0, (sum, i) => sum + i['returns'] as int);
+    /// ✅ CALCULATIONS
+    final double totalInvested = investments.fold(
+      0,
+      (sum, i) => sum + i.investedAmount,
+    );
 
-    final activeCount =
-        investments.where((i) => i['active'] == true).length;
+    final double totalReturns = investments.fold(
+      0,
+      (sum, i) => sum + i.returns,
+    );
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-        /// HEADER
-Text(
-  'Welcome Back, ${widget.user.name}',
-  style: const TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  ),
-),
-const SizedBox(height: 4),
-Text(
-  'Customer ID: ${widget.user.customerId}',
-  style: const TextStyle(
-    color: Colors.grey,
-  ),
-),
+    final int activeCount =
+        investments.where((i) => i.status == 'Active').length;
 
-
-          /// SUMMARY CARDS
-          Row(
-            children: [
-              _summaryCard(
-                'Total Invested',
-                '₹$totalInvested',
-                Icons.account_balance_wallet,
-                const Color(0xFFC5A572),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// HEADER
+            Text(
+              'Welcome Back, ${widget.user.name}',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(width: 12),
-              _summaryCard(
-                'Total Returns',
-                '₹$totalReturns',
-                Icons.trending_up,
-                const Color(0xFFC5A572),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Customer ID: ${widget.user.customerId}',
+              style: const TextStyle(color: Colors.grey),
+            ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
-          Row(
-            children: [
-              _summaryCard(
-                'Active Investments',
-                '$activeCount',
-                Icons.pie_chart,
-                const Color(0xFFC5A572),
-              ),
-              const SizedBox(width: 12),
-              _summaryCard(
-                'Digital Bonds',
-                '8',
-                Icons.receipt_long,
-                const Color(0xFFC5A572),
-              ),
-            ],
-          ),
+            /// SUMMARY CARDS
+            Row(
+              children: [
+                _summaryCard(
+                  'Total Invested',
+                  '₹${totalInvested.toStringAsFixed(0)}',
+                  Icons.account_balance_wallet,
+                ),
+                const SizedBox(width: 12),
+                _summaryCard(
+                  'Total Returns',
+                  '₹${totalReturns.toStringAsFixed(0)}',
+                  Icons.trending_up,
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-          /// INVESTMENT LIST
-          const Text(
-            'Your Investments',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
+            Row(
+              children: [
+                _summaryCard(
+                  'Active Investments',
+                  '$activeCount',
+                  Icons.pie_chart,
+                ),
+                const SizedBox(width: 12),
+                _summaryCard(
+                  'Digital Bonds',
+                  '${InvestmentStore.bonds.length}',
+                  Icons.receipt_long,
+                ),
+              ],
+            ),
 
-          ...investments.map(_investmentCard),
-        ],
+            const SizedBox(height: 24),
+
+            /// RECENT INVESTMENTS
+            const Text(
+              'Recent Investments',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            investments.isEmpty
+                ? _emptyState()
+                : Column(
+                    children: investments
+                        .take(3)
+                        .map((inv) => _investmentCard(inv))
+                        .toList(),
+                  ),
+          ],
+        ),
       ),
     );
   }
 
   /// INVESTMENT CARD
-  Widget _investmentCard(Map<String, dynamic> investment) {
+  Widget _investmentCard(Investment investment) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -138,24 +132,43 @@ Text(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                investment['plan'],
+                investment.planName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-              Text('Invested: ₹${investment['amount']}'),
-              Text('Returns: ₹${investment['returns']}'),
+              Text(
+                'Invested: ₹${investment.investedAmount.toStringAsFixed(0)}',
+              ),
+              Text(
+                'Returns: ₹${investment.returns.toStringAsFixed(0)}',
+              ),
             ],
           ),
           Chip(
             label: Text(
-              investment['active'] ? 'ACTIVE' : 'CLOSED',
+              investment.status,
               style: const TextStyle(color: Colors.white),
             ),
-            backgroundColor: investment['active']
+            backgroundColor: investment.status == 'Active'
                 ? const Color.fromARGB(255, 85, 29, 15)
-                : const Color(0xFFC5A572),
+                : Colors.grey,
           ),
         ],
+      ),
+    );
+  }
+
+  /// EMPTY STATE
+  Widget _emptyState() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: _boxDecoration(),
+      child: const Center(
+        child: Text(
+          'No investments yet.\nStart a new investment to see it here.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
+        ),
       ),
     );
   }
@@ -165,7 +178,6 @@ Text(
     String title,
     String value,
     IconData icon,
-    Color color,
   ) {
     return Expanded(
       child: Container(
@@ -174,9 +186,12 @@ Text(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color),
+            Icon(icon, color: const Color(0xFFC5A572)),
             const SizedBox(height: 8),
-            Text(title, style: const TextStyle(color: Color(0xFFC5A572))),
+            Text(
+              title,
+              style: const TextStyle(color: Color(0xFFC5A572)),
+            ),
             const SizedBox(height: 4),
             Text(
               value,

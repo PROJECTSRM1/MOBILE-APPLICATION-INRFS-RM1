@@ -1,17 +1,23 @@
 class Investment {
-  final String id;
-  final String plan;
-  final String maturity;
-  final double amount;
+  final String investmentId;
+  final String planName;
+  final double investedAmount;
   final double returns;
-  final bool isActive;
+  final double maturityValue;
+  final String tenure;
+  final String interest;
+  final String status;
+  final DateTime date;
 
   Investment({
-    required this.id,
-    required this.plan,
-    required this.maturity,
-    required this.amount,
+    required this.investmentId,
+    required this.planName,
+    required this.investedAmount,
     required this.returns,
-    required this.isActive,
+    required this.maturityValue,
+    required this.tenure,
+    required this.interest,
+    required this.status,
+    required this.date,
   });
 }

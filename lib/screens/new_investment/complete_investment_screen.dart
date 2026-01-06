@@ -1,9 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../bonds/bonds_screen.dart';
-import '../../models/bond_model.dart';
+// import '../../models/bond_model.dart';
 // import '../bonds/bonds_data.dart';
 import '../../data/investment_store.dart';
+import '../../models/investment.dart';
 
 
 class CompleteInvestmentScreen extends StatefulWidget {
@@ -162,7 +163,7 @@ class _CompleteInvestmentScreenState
   // PROCESS PAYMENT (FAKE)
   // =========================
  void _processPayment() {
-  Navigator.pop(context); // close payment modal
+  Navigator.pop(context);
 
   showDialog(
     context: context,
@@ -173,33 +174,24 @@ class _CompleteInvestmentScreenState
   Future.delayed(const Duration(seconds: 2), () {
     if (!mounted) return;
 
-    Navigator.pop(context); // close loader
+    Navigator.pop(context);
 
-    final bond = BondModel(
-      bondId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+    final investment = Investment(
+      investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
       planName: widget.planName,
       investedAmount: investmentAmount,
+      returns: expectedReturns,
       maturityValue: totalMaturity,
       tenure: '3 Months',
       interest: '${widget.interestRate}% p.a.',
       status: 'Active',
-      date: DateTime.now().toString().split(' ').first,
+      date: DateTime.now(),
     );
 
-    // ✅ ADD TO GLOBAL STORE
-    InvestmentStore.bonds.insert(0, bond);
+    /// ✅ INSERT ONLY INVESTMENT (SINGLE SOURCE OF TRUTH)
+    InvestmentStore.investments.insert(0, investment);
 
-    InvestmentStore.investments.insert(0, {
-      'id': bond.bondId,
-      'plan': bond.planName,
-      'amount': investmentAmount,
-      'returns': expectedReturns,
-      'maturity': totalMaturity,
-      'status': 'Active',
-      'date': bond.date,
-    });
-
-    // ✅ NAVIGATE
+    /// ✅ NAVIGATE
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const BondsScreen()),
@@ -207,7 +199,6 @@ class _CompleteInvestmentScreenState
     );
   });
 }
-
 
   // =========================
   // UI

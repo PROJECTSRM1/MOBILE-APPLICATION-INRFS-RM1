@@ -14,18 +14,24 @@ dependencies:
   fl_chart: ^1.1.1
   cupertino_icons: ^1.0.6
   url_launcher: ^6.3.2
-
   http: ^1.2.0
-
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^3.0.0
+
+  # ✅ ONLY for app icon generation
+  flutter_launcher_icons: ^0.13.1
+
+# ✅ App icon configuration (OUTSIDE flutter:)
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/images/logo.png
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
+    - assets/images/logo.png

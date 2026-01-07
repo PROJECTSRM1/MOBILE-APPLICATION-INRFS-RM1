@@ -11,12 +11,12 @@ class BondsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Investment Bonds'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // ⬅ back to dashboard
-          },
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back),
+        //   onPressed: () {
+        //     Navigator.pop(context); // ⬅ back to dashboard
+        //   },
+        // ),
       ),
       body: bonds.isEmpty ? _emptyState() : _bondList(bonds),
     );

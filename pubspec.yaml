@@ -7,31 +7,49 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
+# -------------------------
+# DEPENDENCIES
+# -------------------------
 dependencies:
   flutter:
     sdk: flutter
 
-  fl_chart: ^1.1.1
+  # UI & Core
   cupertino_icons: ^1.0.6
+  fl_chart: ^1.1.1
   url_launcher: ^6.3.2
   http: ^1.2.0
 
+  # PDF & File handling
+  pdf: ^3.10.7
+  path_provider: ^2.1.2
+  open_filex: ^4.4.0
+
+# -------------------------
+# DEV DEPENDENCIES
+# -------------------------
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
 
-  # ✅ ONLY for app icon generation
+  # App icon generator (DEV ONLY)
   flutter_launcher_icons: ^0.13.1
 
-# ✅ App icon configuration (OUTSIDE flutter:)
+# -------------------------
+# APP ICON CONFIGURATION
+# -------------------------
 flutter_icons:
   android: true
   ios: true
   image_path: assets/images/logo.png
 
+# -------------------------
+# FLUTTER CONFIGURATION
+# -------------------------
 flutter:
   uses-material-design: true
 
+  # Load ALL images (login, splash, background, icons)
   assets:
-    - assets/images/logo.png
+    - assets/images/

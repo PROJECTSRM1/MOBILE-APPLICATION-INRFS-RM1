@@ -14,7 +14,7 @@ class InvestmentStore {
         maturityValue: i.maturityValue,
         tenure: i.tenure,
         interest: i.interest,
-        status: i.status,
+        status: i.status, // ✅ FIXED
         date: i.date.toIso8601String().split('T').first,
       );
     }).toList();

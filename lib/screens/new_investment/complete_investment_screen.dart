@@ -4,6 +4,9 @@ import '../../models/investment.dart';
 import '../../services/investment_service.dart';
 import '../../services/auth_service.dart';
 
+import '../investments/investments_screen.dart';
+
+
 
 class CompleteInvestmentScreen extends StatefulWidget {
   final int planId;
@@ -175,7 +178,21 @@ void _processPayment() async {
     if (!mounted) return;
     Navigator.pop(context);
 
-    final investment = Investment(
+    // final investment = Investment(
+    //   investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+    //   planName: widget.planName,
+    //   investedAmount: investmentAmount,
+    //   returns: expectedReturns,
+    //   maturityValue: totalMaturity,
+    //   tenure: '3 Months',
+    //   interest: '${widget.interestRate}% p.a.',
+    //   status: 'Active',
+    //   date: DateTime.now(),
+    // );
+
+
+     
+  final investment = Investment(
       investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
       planName: widget.planName,
       investedAmount: investmentAmount,

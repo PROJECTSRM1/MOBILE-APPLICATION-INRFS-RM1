@@ -1,11 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../bonds/bonds_screen.dart';
-// import '../../models/bond_model.dart';
-// import '../bonds/bonds_data.dart';
 import '../../data/investment_store.dart';
 import '../../models/investment.dart';
-
 
 class CompleteInvestmentScreen extends StatefulWidget {
   final String planName;
@@ -30,7 +26,6 @@ class _CompleteInvestmentScreenState
   double investmentAmount = 0;
   double expectedReturns = 0;
   double totalMaturity = 0;
-
   bool agreed = false;
 
   // =========================
@@ -51,22 +46,18 @@ class _CompleteInvestmentScreenState
   // =========================
   // TERMS POPUP
   // =========================
-  void _showTermsDialog(BuildContext context) {
+  void _showTermsDialog() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Terms & Conditions'),
-        content: const SingleChildScrollView(
-          child: Text(
-            '1. Investment is locked for the selected tenure period.\n'
-            '2. Returns are calculated based on the fixed interest rate.\n'
-            '3. Digital bond will be issued immediately after payment confirmation.\n'
-            '4. Early withdrawal may incur penalties as per policy.\n'
-            '5. All investments are subject to regulatory compliance.\n'
-            '6. Interest is calculated on a simple interest basis.\n'
-            '7. Maturity amount will be credited to your registered account.',
-            style: TextStyle(fontSize: 12),
-          ),
+        content: const Text(
+          '1. Investment is locked for the selected tenure period.\n'
+          '2. Returns are calculated based on the fixed interest rate.\n'
+          '3. Digital bond will be issued after payment confirmation.\n'
+          '4. Early withdrawal may incur penalties.\n'
+          '5. Maturity amount will be credited to your account.',
+          style: TextStyle(fontSize: 12),
         ),
         actions: [
           TextButton(
@@ -79,126 +70,180 @@ class _CompleteInvestmentScreenState
   }
 
   // =========================
-  // PAYMENT MODAL (GLASS UI)
+  // PAYMENT SHEET
   // =========================
-  void _showPaymentSheet() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      builder: (_) {
-        return Center(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              constraints: const BoxConstraints(maxWidth: 380),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(20),
+ void _showPaymentSheet() {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black.withValues(alpha: 0.35),
+    builder: (_) => Center(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          constraints: const BoxConstraints(maxWidth: 380),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              /// TITLE
+              const Text(
+                'Complete Payment',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              child: Material(
-                color: Colors.transparent,
+
+              const SizedBox(height: 16),
+
+              /// LIGHT INFO CARD
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF2FB),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Complete Payment',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    _paymentInfoRow(
+                      'Plan Type',
+                      widget.planName,
                     ),
-
-                    const SizedBox(height: 20),
-
-                    _paymentRow('Plan Type', widget.planName),
-                    _paymentRow(
+                    _paymentInfoRow(
                       'Amount to Pay',
                       '₹${investmentAmount.toStringAsFixed(0)}',
                       bold: true,
                     ),
-                    _paymentRow(
+                    _paymentInfoRow(
                       'Expected Returns',
                       '₹${expectedReturns.toStringAsFixed(0)}',
                       valueColor: Colors.green,
                     ),
-
-                    const SizedBox(height: 24),
-
-                    _paymentButton(
-                      icon: Icons.credit_card,
-                      text: 'Pay with Stripe',
-                    ),
-                    _paymentButton(
-                      icon: Icons.account_balance_wallet,
-                      text: 'Pay with PayPal',
-                    ),
-                    _paymentButton(
-                      icon: Icons.account_balance,
-                      text: 'Bank Transfer',
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
                   ],
                 ),
               ),
-            ),
+
+              const SizedBox(height: 20),
+
+              /// PAYMENT BUTTONS
+              _paymentMethodButton(
+                icon: Icons.credit_card,
+                label: 'Pay with Stripe',
+              ),
+              _paymentMethodButton(
+                icon: Icons.account_balance_wallet,
+                label: 'Pay with PayPal',
+              ),
+              _paymentMethodButton(
+                icon: Icons.account_balance,
+                label: 'Bank Transfer',
+              ),
+
+              const SizedBox(height: 14),
+
+              /// CANCEL
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
+    ),
+  );
+}
+
+  // =========================
+  // PROCESS PAYMENT
+  // =========================
+  void _processPayment() {
+    Navigator.pop(context); // close payment sheet
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator()),
     );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+
+      Navigator.pop(context); // close loader
+
+      final investment = Investment(
+        investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+        planName: widget.planName,
+        investedAmount: investmentAmount,
+        returns: expectedReturns,
+        maturityValue: totalMaturity,
+        tenure: 'Short Term',
+        interest: '${widget.interestRate}%',
+        status: 'Active',
+        date: DateTime.now(),
+      );
+
+      /// ✅ SAVE INVESTMENT
+      InvestmentStore.investments.insert(0, investment);
+
+      _showSuccessDialog(investment);
+    });
   }
 
   // =========================
-  // PROCESS PAYMENT (FAKE)
+  // SUCCESS POPUP
   // =========================
- void _processPayment() {
-  Navigator.pop(context);
-
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
-  );
-
-  Future.delayed(const Duration(seconds: 2), () {
-    if (!mounted) return;
-
-    Navigator.pop(context);
-
-    final investment = Investment(
-      investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
-      planName: widget.planName,
-      investedAmount: investmentAmount,
-      returns: expectedReturns,
-      maturityValue: totalMaturity,
-      tenure: '3 Months',
-      interest: '${widget.interestRate}% p.a.',
-      status: 'Active',
-      date: DateTime.now(),
+  void _showSuccessDialog(Investment investment) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Payment Successful 🎉'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle,
+                size: 60, color: Colors.green),
+            const SizedBox(height: 12),
+            Text(
+              '₹${investment.investedAmount.toStringAsFixed(0)} invested successfully.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            child: const Text('View Investments'),
+          ),
+        ],
+      ),
     );
-
-    /// ✅ INSERT ONLY INVESTMENT (SINGLE SOURCE OF TRUTH)
-    InvestmentStore.investments.insert(0, investment);
-
-    /// ✅ NAVIGATE
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const BondsScreen()),
-      (_) => false,
-    );
-  });
-}
+  }
 
   // =========================
   // UI
@@ -211,46 +256,13 @@ class _CompleteInvestmentScreenState
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // PLAN INFO
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border(
-                  left: BorderSide(
-                    color: Colors.blue.shade700,
-                    width: 4,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Selected Plan: ${widget.planName}',
-                    style:
-                        const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Enter your investment amount to see calculated returns',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-
+            _planInfo(),
             const SizedBox(height: 24),
-
-            const Text(
-              'Investment Amount',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            const Text('Investment Amount',
+                style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,
@@ -258,106 +270,24 @@ class _CompleteInvestmentScreenState
               decoration: const InputDecoration(
                 prefixText: '₹ ',
                 border: OutlineInputBorder(),
-                isDense: true,
               ),
               onChanged: (_) => _calculate(),
             ),
-
             const SizedBox(height: 20),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Colors.blue, Colors.indigo],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Calculated Returns',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '₹${expectedReturns.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Total Maturity: ₹${totalMaturity.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
+            _returnsCard(),
             const SizedBox(height: 32),
-
-            const Text(
-              'Investment Summary',
-              style:
-                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-
-            _summaryRow('Plan Type', widget.planName),
-            _summaryRow(
-              'Investment Amount',
-              '₹${investmentAmount.toStringAsFixed(0)}',
-            ),
-            _summaryRow(
-              'Interest Rate',
-              '${widget.interestRate}%',
-            ),
-            _summaryRow(
-              'Expected Returns',
-              '₹${expectedReturns.toStringAsFixed(2)}',
-              valueColor: Colors.green,
-            ),
-
-            const Divider(height: 32),
-
-            _summaryRow(
-              'Total Maturity Amount',
-              '₹${totalMaturity.toStringAsFixed(2)}',
-              bold: true,
-              valueColor: Colors.blue,
-            ),
-
-            const SizedBox(height: 24),
-
+            _summary(),
+            const SizedBox(height: 20),
             TextButton(
-              onPressed: () => _showTermsDialog(context),
-              child: const Text(
-                'Terms & Conditions',
-                style:
-                    TextStyle(decoration: TextDecoration.underline),
-              ),
+              onPressed: _showTermsDialog,
+              child: const Text('Terms & Conditions'),
             ),
-
             CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
               value: agreed,
               onChanged: (v) => setState(() => agreed = v!),
-              title: const Text(
-                'I agree to the Terms & Conditions',
-                style: TextStyle(fontSize: 12),
-              ),
+              title: const Text('I agree to the Terms & Conditions'),
             ),
-
             const SizedBox(height: 24),
-
             Row(
               children: [
                 Expanded(
@@ -382,14 +312,71 @@ class _CompleteInvestmentScreenState
   }
 
   // =========================
-  // HELPERS
+  // SMALL UI HELPERS
   // =========================
-  Widget _summaryRow(
-    String label,
-    String value, {
-    bool bold = false,
-    Color? valueColor,
-  }) {
+  Widget _planInfo() => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            left: BorderSide(color: Colors.blue.shade700, width: 4),
+          ),
+        ),
+        child: Text(
+          'Selected Plan: ${widget.planName}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
+
+  Widget _returnsCard() => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient:
+              const LinearGradient(colors: [Colors.blue, Colors.indigo]),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Calculated Returns',
+                style: TextStyle(color: Colors.white70)),
+            Text('₹${expectedReturns.toStringAsFixed(2)}',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
+            Text(
+              'Total Maturity: ₹${totalMaturity.toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      );
+
+  Widget _summary() => Column(
+        children: [
+          _summaryRow('Plan Type', widget.planName),
+          _summaryRow('Investment Amount',
+              '₹${investmentAmount.toStringAsFixed(0)}'),
+          _summaryRow('Interest Rate', '${widget.interestRate}%'),
+          _summaryRow(
+            'Expected Returns',
+            '₹${expectedReturns.toStringAsFixed(2)}',
+            valueColor: Colors.green,
+          ),
+          const Divider(),
+          _summaryRow(
+            'Total Maturity Amount',
+            '₹${totalMaturity.toStringAsFixed(2)}',
+            bold: true,
+            valueColor: Colors.blue,
+          ),
+        ],
+      );
+
+  Widget _summaryRow(String label, String value,
+      {bool bold = false, Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -399,8 +386,7 @@ class _CompleteInvestmentScreenState
           Text(
             value,
             style: TextStyle(
-              fontWeight:
-                  bold ? FontWeight.bold : FontWeight.normal,
+              fontWeight: bold ? FontWeight.bold : null,
               color: valueColor,
             ),
           ),
@@ -409,44 +395,102 @@ class _CompleteInvestmentScreenState
     );
   }
 
-  Widget _paymentRow(
-    String label,
-    String value, {
-    bool bold = false,
-    Color? valueColor,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-              color: valueColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _paymentRow(String label, String value,
+  //     {bool bold = false, Color? valueColor}) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(vertical: 6),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Text(label, style: const TextStyle(color: Colors.grey)),
+  //         Text(
+  //           value,
+  //           style: TextStyle(
+  //             fontWeight: bold ? FontWeight.bold : null,
+  //             color: valueColor,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _paymentButton({
-    required IconData icon,
-    required String text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          icon: Icon(icon),
-          label: Text(text),
-          onPressed: _processPayment,
+//   Widget _paymentButton(
+//       {required IconData icon, required String text}) {
+//     return SizedBox(
+//       width: double.infinity,
+//       child: OutlinedButton.icon(
+//         icon: Icon(icon),
+//         label: Text(text),
+//         onPressed: _processPayment,
+//       ),
+//     );
+//   }
+//   // =========================
+// // PAYMENT INFO ROW (FOR BLUE CARD)
+// // =========================
+Widget _paymentInfoRow(
+  String label,
+  String value, {
+  bool bold = false,
+  Color? valueColor,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontSize: 14,
+          ),
         ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            color: valueColor ?? Colors.black,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// =========================
+// PAYMENT METHOD BUTTON (AS PER IMAGE)
+// =========================
+Widget _paymentMethodButton({
+  required IconData icon,
+  required String label,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: Icon(icon, color: const Color(0xFFB57B3A)),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Color(0xFFB57B3A),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFB57B3A)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        onPressed: _processPayment,
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

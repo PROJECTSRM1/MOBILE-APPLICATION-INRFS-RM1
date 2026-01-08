@@ -170,6 +170,7 @@ class _PlanCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) => CompleteInvestmentScreen(
+                             planId: plan.id,
                             planName: plan.planType,
                             interestRate:
                                 _parsePercentage(plan.percentage),

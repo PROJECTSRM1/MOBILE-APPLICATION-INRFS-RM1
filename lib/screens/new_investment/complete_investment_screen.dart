@@ -6,6 +6,9 @@ import '../bonds/bonds_screen.dart';
 import '../../data/investment_store.dart';
 import '../../models/investment.dart';
 
+import '../investments/investments_screen.dart';
+
+
 
 class CompleteInvestmentScreen extends StatefulWidget {
   final String planName;
@@ -162,7 +165,70 @@ class _CompleteInvestmentScreenState
   // =========================
   // PROCESS PAYMENT (FAKE)
   // =========================
- void _processPayment() {
+//  void _processPayment() {
+
+//   Navigator.pop(context);
+
+//   showDialog(
+//     context: context,
+//     barrierDismissible: false,
+//     builder: (_) => const Center(child: CircularProgressIndicator()),
+//   );
+
+//   Future.delayed(const Duration(seconds: 2), () {
+//     if (!mounted) return;
+
+//     Navigator.pop(context);
+
+//     final investment = Investment(
+//       investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+//       planName: widget.planName,
+//       investedAmount: investmentAmount,
+//       returns: expectedReturns,
+//       maturityValue: totalMaturity,
+//       tenure: '3 Months',
+//       interest: '${widget.interestRate}% p.a.',
+//       status: 'Active',
+//       date: DateTime.now(),
+//     );
+
+//     /// ✅ INSERT ONLY INVESTMENT (SINGLE SOURCE OF TRUTH)
+//     InvestmentStore.investments.insert(0, investment);
+
+//     /// ✅ NAVIGATE
+//     // Navigator.pushAndRemoveUntil(
+//     //   context,
+//     //   MaterialPageRoute(builder: (_) => const BondsScreen()),
+//     //   (_) => false,
+//     // );
+
+
+    
+
+//     // Navigator.pushAndRemoveUntil(
+//     //   context,
+//     //   MaterialPageRoute(
+//     //     builder: (_) => const InvestmentsScreen(),
+//     //   ),
+//     //   (_) => false,
+//     // );
+
+
+      
+
+    
+//     Navigator.popUntil(context, (route) => route.isFirst);
+
+
+
+
+//   });
+// }
+
+
+
+
+void _processPayment() {
   Navigator.pop(context);
 
   showDialog(
@@ -176,7 +242,21 @@ class _CompleteInvestmentScreenState
 
     Navigator.pop(context);
 
-    final investment = Investment(
+    // final investment = Investment(
+    //   investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
+    //   planName: widget.planName,
+    //   investedAmount: investmentAmount,
+    //   returns: expectedReturns,
+    //   maturityValue: totalMaturity,
+    //   tenure: '3 Months',
+    //   interest: '${widget.interestRate}% p.a.',
+    //   status: 'Active',
+    //   date: DateTime.now(),
+    // );
+
+
+     
+  final investment = Investment(
       investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
       planName: widget.planName,
       investedAmount: investmentAmount,
@@ -184,21 +264,25 @@ class _CompleteInvestmentScreenState
       maturityValue: totalMaturity,
       tenure: '3 Months',
       interest: '${widget.interestRate}% p.a.',
+      isActive: true,
       status: 'Active',
       date: DateTime.now(),
     );
 
-    /// ✅ INSERT ONLY INVESTMENT (SINGLE SOURCE OF TRUTH)
+
+
+
+    /// ✅ SINGLE SOURCE OF TRUTH
     InvestmentStore.investments.insert(0, investment);
 
-    /// ✅ NAVIGATE
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const BondsScreen()),
-      (_) => false,
-    );
+    /// ✅ GO BACK TO DASHBOARD (Investments tab will refresh)
+    Navigator.popUntil(context, (route) => route.isFirst);
   });
 }
+
+
+
+
 
   // =========================
   // UI

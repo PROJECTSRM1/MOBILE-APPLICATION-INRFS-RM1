@@ -1,134 +1,380 @@
+// import 'package:flutter/material.dart';
+// import '../../data/dummy_data.dart';
+// import 'investment_details_screen.dart';
+
+// class InvestmentsScreen extends StatelessWidget {
+//   const InvestmentsScreen({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('My Investments')),
+//       body: ListView.builder(
+//         padding: const EdgeInsets.all(16),
+//         itemCount: investments.length,
+//         itemBuilder: (context, index) {
+//           final i = investments[index];
+//           return _investmentCard(context, i);
+//         },
+//       ),
+//     );
+//   }
+
+//   // ---------------- Investment Card ----------------
+
+//   Widget _investmentCard(BuildContext context, dynamic i) {
+//     return InkWell(
+//       borderRadius: BorderRadius.circular(12),
+//       onTap: () => _openDetails(context, i),
+//       child: Card(
+//         margin: const EdgeInsets.only(bottom: 12),
+//         elevation: 2,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(12),
+//         ),
+//         child: Padding(
+//           padding: const EdgeInsets.all(14),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               // Investment ID
+//               Text(
+//                 i.id,
+//                 style: const TextStyle(
+//                   color: Color.fromARGB(255, 234, 170, 254),
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+
+//               const SizedBox(height: 8),
+
+//               _row('Plan', i.plan),
+//               _row('Amount', '₹${i.amount}'),
+//               _row(
+//                 'Returns',
+//                 '₹${i.returns}',
+//                 valueColor: Colors.green,
+//               ),
+
+//               // Status Chip (Clickable)
+//               _statusRow(context, i),
+
+//               _row('Maturity', i.maturity),
+
+//               // Withdraw Button (Active only)
+//               if (i.isActive) ...[
+//                 const SizedBox(height: 12),
+//                Center(
+//   child: SizedBox(
+//     width: 140, // 👈 control button width here
+//     height: 40,
+//     child: ElevatedButton(
+//       onPressed: () => _openDetails(context, i),
+//       style: ElevatedButton.styleFrom(
+//         padding: const EdgeInsets.symmetric(horizontal: 12),
+//         textStyle: const TextStyle(
+//           fontSize: 14,
+//           fontWeight: FontWeight.w600,
+//         ),
+//       ),
+//       child: const Text('Withdraw'),
+//     ),
+//   ),
+// ),
+
+    
+//               ],
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   // ---------------- Status Row ----------------
+
+//   Widget _statusRow(BuildContext context, dynamic i) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 4),
+//       child: Row(
+//         children: [
+//           const Expanded(
+//             flex: 3,
+//             child: Text(
+//               'Status',
+//               style: TextStyle(color: Colors.grey),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 5,
+//             child: Align(
+//               alignment: Alignment.centerLeft,
+//               child: GestureDetector(
+//                 onTap: () => _openDetails(context, i),
+//                 child: Chip(
+//                   label: Text(
+//                     i.isActive ? 'Active' : 'Completed',
+//                     style: const TextStyle(color: Colors.white),
+//                   ),
+//                   backgroundColor:
+//                       i.isActive ? const Color.fromARGB(255, 235, 177, 54) : const Color.fromARGB(255, 228, 168, 240),
+//                   visualDensity: VisualDensity.compact,
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   // ---------------- Row UI ----------------
+
+//   Widget _row(
+//     String title,
+//     String value, {
+//     Color? valueColor,
+//   }) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 4),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             flex: 3,
+//             child: Text(
+//               title,
+//               style: const TextStyle(color: Colors.grey),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 5,
+//             child: Text(
+//               value,
+//               style: TextStyle(
+//                 fontWeight: FontWeight.w600,
+//                 color: valueColor,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   // ---------------- Navigation ----------------
+
+//   void _openDetails(BuildContext context, dynamic investment) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) =>
+//             InvestmentDetailsScreen(investment: investment),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import 'package:flutter/material.dart';
-import '../../data/dummy_data.dart';
+import '../../data/investment_store.dart';
+import '../../models/investment.dart';
+import '../../services/api_service.dart';
 import 'investment_details_screen.dart';
 
-class InvestmentsScreen extends StatelessWidget {
+class InvestmentsScreen extends StatefulWidget {
   const InvestmentsScreen({super.key});
 
   @override
+  State<InvestmentsScreen> createState() =>
+      _InvestmentsScreenState();
+}
+
+class _InvestmentsScreenState extends State<InvestmentsScreen> {
+  bool loading = true;
+
+  // 🔴 Replace this with token from storage later
+  final String token = 'PUT_YOUR_AUTH_TOKEN_HERE';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInvestments();
+  }
+
+  Future<void> _loadInvestments() async {
+    try {
+      final data =
+          await ApiService.getMyInvestments(token: token);
+
+      InvestmentStore.investments
+        ..clear()
+        ..addAll(
+          data.map((e) => Investment.fromApi(e)),
+        );
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Load investments error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load investments'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final investments = InvestmentStore.investments;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('My Investments')),
-      body: ListView.builder(
+      appBar: AppBar(
+        title: const Text('My Investments'),
+      ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : investments.isEmpty
+              ? const Center(child: Text('No investments found'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: investments.length,
+                  itemBuilder: (context, index) {
+                    final i = investments[index];
+                    return _investmentCard(context, i);
+                  },
+                ),
+    );
+  }
+
+  // ================= Investment Card =================
+
+  Widget _investmentCard(BuildContext context, Investment i) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
         padding: const EdgeInsets.all(16),
-        itemCount: investments.length,
-        itemBuilder: (context, index) {
-          final i = investments[index];
-          return _investmentCard(context, i);
-        },
-      ),
-    );
-  }
-
-  // ---------------- Investment Card ----------------
-
-  Widget _investmentCard(BuildContext context, dynamic i) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => _openDetails(context, i),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Investment ID
-              Text(
-                i.id,
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 234, 170, 254),
-                  fontWeight: FontWeight.w600,
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Investment ID
+            Text(
+              i.investmentId,
+              style: const TextStyle(
+                color: Color.fromARGB(255, 234, 170, 254),
+                fontWeight: FontWeight.w600,
               ),
-
-              const SizedBox(height: 8),
-
-              _row('Plan', i.plan),
-              _row('Amount', '₹${i.amount}'),
-              _row(
-                'Returns',
-                '₹${i.returns}',
-                valueColor: Colors.green,
-              ),
-
-              // Status Chip (Clickable)
-              _statusRow(context, i),
-
-              _row('Maturity', i.maturity),
-
-              // Withdraw Button (Active only)
-              if (i.isActive) ...[
-                const SizedBox(height: 12),
-               Center(
-  child: SizedBox(
-    width: 140, // 👈 control button width here
-    height: 40,
-    child: ElevatedButton(
-      onPressed: () => _openDetails(context, i),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      child: const Text('Withdraw'),
-    ),
-  ),
-),
-
-    
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ---------------- Status Row ----------------
-
-  Widget _statusRow(BuildContext context, dynamic i) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          const Expanded(
-            flex: 3,
-            child: Text(
-              'Status',
-              style: TextStyle(color: Colors.grey),
             ),
-          ),
-          Expanded(
-            flex: 5,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: GestureDetector(
-                onTap: () => _openDetails(context, i),
-                child: Chip(
-                  label: Text(
-                    i.isActive ? 'Active' : 'Completed',
-                    style: const TextStyle(color: Colors.white),
+
+            const SizedBox(height: 10),
+
+            _row('Plan', i.planName),
+            _row(
+              'Amount',
+              '₹${i.investedAmount.toStringAsFixed(0)}',
+            ),
+            _row(
+              'Returns',
+              '₹${i.returns.toStringAsFixed(2)}',
+              valueColor: Colors.green,
+            ),
+
+            // ================= STATUS ROW (ALIGNED) =================
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  const Expanded(
+                    flex: 3,
+                    child: Text(
+                      'Status',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
-                  backgroundColor:
-                      i.isActive ? const Color.fromARGB(255, 235, 177, 54) : const Color.fromARGB(255, 228, 168, 240),
-                  visualDensity: VisualDensity.compact,
-                ),
+                  Expanded(
+                    flex: 5,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Chip(
+                        label: Text(
+                          i.status,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        backgroundColor: i.isActive
+                            ? const Color.fromARGB(
+                                255, 235, 177, 54)
+                            : const Color.fromARGB(
+                                255, 228, 168, 240),
+                        visualDensity:
+                            VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+
+            _row('Maturity', i.tenure),
+
+            // ================= WITHDRAW BUTTON =================
+            if (i.isActive) ...[
+              const SizedBox(height: 14),
+              Center(
+                child: SizedBox(
+                  width: 160,
+                  height: 42,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _safeOpenDetails(context, i),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color.fromARGB(
+                              255, 184, 122, 61),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Withdraw',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  // ---------------- Row UI ----------------
+  // ================= ROW UI =================
 
   Widget _row(
     String title,
@@ -161,15 +407,28 @@ class InvestmentsScreen extends StatelessWidget {
     );
   }
 
-  // ---------------- Navigation ----------------
+  // ================= SAFE NAVIGATION =================
 
-  void _openDetails(BuildContext context, dynamic investment) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            InvestmentDetailsScreen(investment: investment),
-      ),
-    );
+  void _safeOpenDetails(
+    BuildContext context,
+    Investment investment,
+  ) {
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              InvestmentDetailsScreen(investment: investment),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Navigation error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Unable to open investment details'),
+        ),
+      );
+    }
   }
 }

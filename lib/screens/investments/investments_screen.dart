@@ -70,7 +70,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Investments'),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

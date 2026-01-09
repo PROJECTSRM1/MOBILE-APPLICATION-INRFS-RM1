@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../models/investment.dart';
 
 class InvestmentDetailsScreen extends StatefulWidget {
-  final dynamic investment;
+  final Investment investment;
 
   const InvestmentDetailsScreen({
     super.key,
@@ -52,14 +53,26 @@ class _InvestmentDetailsScreenState
                 _whiteCard(
                   child: Column(
                     children: [
-                      _infoRow('Investment ID', widget.investment.id),
-                      _infoRow('Plan', widget.investment.plan),
                       _infoRow(
-                          'Amount', '₹${widget.investment.amount}'),
+                        'Investment ID',
+                        widget.investment.investmentId,
+                      ),
                       _infoRow(
-                          'Returns', '₹${widget.investment.returns}'),
+                        'Plan',
+                        widget.investment.planName,
+                      ),
                       _infoRow(
-                          'Maturity', widget.investment.maturity),
+                        'Amount',
+                        '₹${widget.investment.investedAmount.toStringAsFixed(0)}',
+                      ),
+                      _infoRow(
+                        'Returns',
+                        '₹${widget.investment.returns.toStringAsFixed(2)}',
+                      ),
+                      _infoRow(
+                        'Tenure',
+                        widget.investment.tenure,
+                      ),
                     ],
                   ),
                 ),
@@ -100,7 +113,8 @@ class _InvestmentDetailsScreenState
                               selectedTab = 'pros';
                             });
                           },
-                          style: _tabButtonStyle(selectedTab == 'pros'),
+                          style:
+                              _tabButtonStyle(selectedTab == 'pros'),
                           child: const Text('Pros'),
                         ),
                       ),
@@ -112,7 +126,8 @@ class _InvestmentDetailsScreenState
                               selectedTab = 'cons';
                             });
                           },
-                          style: _tabButtonStyle(selectedTab == 'cons'),
+                          style:
+                              _tabButtonStyle(selectedTab == 'cons'),
                           child: const Text('Cons'),
                         ),
                       ),
@@ -126,12 +141,14 @@ class _InvestmentDetailsScreenState
                       child: Column(
                         children: const [
                           _Bullet(
-                              text:
-                                  'Stable and predictable returns'),
+                            text:
+                                'Stable and predictable returns',
+                          ),
                           _Bullet(text: 'Low volatility'),
                           _Bullet(
-                              text:
-                                  'Professional fund management'),
+                            text:
+                                'Professional fund management',
+                          ),
                         ],
                       ),
                     ),
@@ -141,14 +158,17 @@ class _InvestmentDetailsScreenState
                       child: Column(
                         children: const [
                           _Bullet(
-                              text:
-                                  'Limited liquidity during lock-in'),
+                            text:
+                                'Limited liquidity during lock-in',
+                          ),
                           _Bullet(
-                              text:
-                                  'Early withdrawal penalty'),
+                            text:
+                                'Early withdrawal penalty',
+                          ),
                           _Bullet(
-                              text:
-                                  'Returns subject to market risks'),
+                            text:
+                                'Returns subject to market risks',
+                          ),
                         ],
                       ),
                     ),
@@ -167,8 +187,9 @@ class _InvestmentDetailsScreenState
                           child: ElevatedButton(
                             onPressed: () {
                             },
-                            child:
-                                const Text('Withdraw Investment'),
+                            child: const Text(
+                              'Withdraw Investment',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),

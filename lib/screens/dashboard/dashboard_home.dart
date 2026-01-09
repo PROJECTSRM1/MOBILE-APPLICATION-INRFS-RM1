@@ -37,7 +37,7 @@ class _DashboardHomeState extends State<DashboardHome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(

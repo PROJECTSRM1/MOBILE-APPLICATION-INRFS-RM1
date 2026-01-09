@@ -56,17 +56,7 @@ class _InvestorDashboardState extends State<InvestorDashboard> {
           ],
         ),
 
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.power_settings_new,
-              color: Colors.redAccent,
-            ),
-            onPressed: () {
-              Navigator.pop(context); // logout
-            },
-          ),
-        ],
+     
       ),
 
       body: _buildBody(),

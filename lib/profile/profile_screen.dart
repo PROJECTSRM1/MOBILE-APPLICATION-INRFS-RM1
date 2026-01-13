@@ -1,62 +1,194 @@
+// lib/profile/profile_screen.dart
+
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../services/profile_service.dart';
 import '../models/user_model.dart';
+import 'account_details_screen.dart';
+import 'bank_details_screen.dart';
+import 'customer_support_screen.dart';
+import 'about_us_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
-  final UserModel user;
+class ProfileScreen extends StatefulWidget {
+  final UserModel? user;
+  final String? token;
 
-  const ProfileScreen({super.key, required this.user});
+  const ProfileScreen({
+    super.key,
+    this.user,
+    this.token,
+  });
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late ProfileService _profileService;
+  UserModel? _userProfile;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final token = widget.token ?? AuthService.accessToken;
+
+    if (token != null) {
+      _profileService = ProfileService(authToken: token);
+      _userProfile = widget.user;
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _profileService.logout();
+      AuthService.logout();
+
+      if (mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/login', (route) => false);
+      }
+    }
+  }
+
+  void _navigateToAccountDetails() async {
+    final token = widget.token ?? AuthService.accessToken;
+    if (token == null || _userProfile == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AccountDetailsScreen(
+          token: token,
+          userProfile: _userProfile!,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _navigateToBankDetails() {
+    final token = widget.token ?? AuthService.accessToken;
+    if (token == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BankDetailsScreen(
+          token: token,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToCustomerSupport() {
+    final token = widget.token ?? AuthService.accessToken;
+    if (token == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerSupportScreen(token: token),
+      ),
+    );
+  }
+
+  void _navigateToAboutUs() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AboutUsScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFB87A3D)),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       appBar: AppBar(
-        elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        leading: const BackButton(),
+        elevation: 0,
         title: const Text(
           'Profile',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        actions: const [
-          Icon(Icons.notifications_none),
-          SizedBox(width: 12),
-          Icon(Icons.settings),
-          SizedBox(width: 12),
-        ],
+        foregroundColor: Colors.black,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // User Profile Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 4),
+                ],
+              ),
+              child: Row(
                 children: [
-                  const SizedBox(height: 20),
-
-                  /// -------- PROFILE HEADER --------
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    color: Colors.white,
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFFB87A3D),
+                    child: Text(
+                      _userProfile?.initials ?? 'U',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 42,
-                          backgroundColor: const Color(0xFFB87A3D),
-                          child: Text(
-                            user.name.isNotEmpty
-                                ? user.name[0].toUpperCase()
-                                : 'U',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         Text(
-                          user.name,
+                          _userProfile?.fullName ?? 'User',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -64,139 +196,102 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Customer ID: ${user.customerId}',
-                          style: const TextStyle(color: Colors.grey),
+                          _userProfile?.email ?? '',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  /// -------- BALANCE CARD --------
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 6),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              '₹0.00',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Stocks, F&O balance',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        if (_userProfile?.invRegId != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'ID: ${_userProfile!.invRegId}',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
                             ),
                           ),
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add money'),
-                        ),
+                        ],
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  /// -------- MENU ITEMS --------
-                  _menuTile(Icons.person_outline, 'Account details'),
-                  _menuTile(Icons.account_balance, 'Bank & AutoPay'),
-                  _menuTile(Icons.support_agent, 'Customer support 24×7'),
-                  _menuTile(Icons.lock_outline, 'Change password'),
-                  _menuTile(Icons.logout, 'Logout'),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
-          ),
+            const SizedBox(height: 24),
 
-          /// -------- BOTTOM SECTION --------
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Colors.black12),
-              ),
+            // Menu Items
+            _buildMenuTile(
+              icon: Icons.person_outline,
+              title: 'Account details',
+              onTap: _navigateToAccountDetails,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to About Us
-                  },
-                  child: const Text(
-                    'About Us',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                const Text(
-                  'v1.0.0',
-                  style: TextStyle(color: Colors.grey),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to Charges
-                  },
-                  child: const Text(
-                    'Charges',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
+            _buildMenuTile(
+              icon: Icons.account_balance,
+              title: 'Bank & AutoPay',
+              onTap: _navigateToBankDetails,
             ),
-          ),
-        ],
+            _buildMenuTile(
+              icon: Icons.support_agent,
+              title: 'Customer support 24×7',
+              onTap: _navigateToCustomerSupport,
+            ),
+            _buildMenuTile(
+              icon: Icons.description_outlined,
+              title: 'Terms & Conditions',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Terms & Conditions coming soon'),
+                  ),
+                );
+              },
+            ),
+            _buildMenuTile(
+              icon: Icons.info_outline,
+              title: 'About us',
+              onTap: _navigateToAboutUs,
+            ),
+            const SizedBox(height: 16),
+            _buildMenuTile(
+              icon: Icons.logout,
+              title: 'Logout',
+              textColor: Colors.red,
+              onTap: _handleLogout,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// -------- MENU TILE --------
-  Widget _menuTile(IconData icon, String title) {
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? textColor,
+  }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4),
+        ],
       ),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFFB87A3D)),
+        leading: Icon(icon, color: textColor ?? const Color(0xFFB87A3D)),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: textColor ?? Colors.black,
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {},
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: onTap,
       ),
     );
   }

@@ -15,6 +15,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool agree = false;
   bool loading = false;
 
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   final TextEditingController firstNameCtrl = TextEditingController();
   final TextEditingController lastNameCtrl = TextEditingController();
   final TextEditingController emailCtrl = TextEditingController();
@@ -57,7 +60,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /* ---------------- REGISTER ---------------- */
 
   Future<void> _register() async {
-    // Validation
     final emailError = _validateEmail(emailCtrl.text.trim());
     if (emailError != null) {
       _showSnack(emailError);
@@ -105,7 +107,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: emailCtrl.text.trim(),
         mobile: mobileCtrl.text.trim(),
         password: passwordCtrl.text.trim(),
-        // role_id is set to 1 by default in the backend for investors
       );
 
       if (!mounted) return;
@@ -115,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         success: true,
       );
 
-      // 👉 NAVIGATE TO OTP SCREEN WITH EMAIL
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -145,7 +145,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 🔹 Background Image
           Image.asset(
             'assets/images/share1.jpg',
             fit: BoxFit.cover,
@@ -173,7 +172,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Header Icon
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -247,8 +245,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _glassField(
                           controller: passwordCtrl,
                           label: 'Password',
-                          obscure: true,
+                          obscure: _obscurePassword,
                           icon: Icons.lock_outline,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.white70,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
 
                         const SizedBox(height: 14),
@@ -256,13 +267,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _glassField(
                           controller: confirmPasswordCtrl,
                           label: 'Confirm Password',
-                          obscure: true,
+                          obscure: _obscureConfirmPassword,
                           icon: Icons.lock_outline,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.white70,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
 
                         const SizedBox(height: 16),
 
-                        // Terms & Conditions Checkbox
                         Row(
                           children: [
                             SizedBox(
@@ -296,7 +320,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Register Button
                         SizedBox(
                           width: double.infinity,
                           height: 48,
@@ -332,7 +355,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Login Link
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -389,13 +411,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // 🔹 Glass TextField with Icon
   Widget _glassField({
     required TextEditingController controller,
     required String label,
     bool obscure = false,
     TextInputType keyboardType = TextInputType.text,
     IconData? icon,
+    Widget? suffixIcon,
   }) {
     return TextField(
       controller: controller,
@@ -405,9 +427,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: icon != null
-            ? Icon(icon, color: Colors.white70)
-            : null,
+        prefixIcon: icon != null ? Icon(icon, color: Colors.white70) : null,
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.15),
         border: OutlineInputBorder(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -72,6 +73,86 @@ class ApiService {
     } else {
       final error = jsonDecode(response.body);
       throw Exception(error['detail'] ?? 'Invalid OTP');
+    }
+  }
+
+  // ===========================
+  // RESEND OTP
+  // ===========================
+  static Future<Map<String, dynamic>> resendOtp({
+    required String email,
+  }) async {
+    final Uri url = Uri.parse('$baseUrl/users/resend-otp?email=$email');
+
+    print('📧 Resending OTP to: $email');
+    print('🔍 Request URL: $url');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: _headers(),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please check your connection.');
+        },
+      );
+
+      print('📥 Resend OTP Response Status: ${response.statusCode}');
+      print('📥 Resend OTP Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ OTP resent successfully');
+        return data;
+      } else if (response.statusCode == 404) {
+        // User not found
+        throw Exception('Email not registered');
+      } else if (response.statusCode == 400) {
+        // Bad request
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['detail'] ?? 'Invalid request');
+        } catch (e) {
+          throw Exception('Failed to resend OTP');
+        }
+      } else if (response.statusCode == 422) {
+        // Validation error
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['detail'] ?? 'Invalid email format');
+        } catch (e) {
+          throw Exception('Invalid email format');
+        }
+      } else if (response.statusCode == 429) {
+        // Too many requests
+        throw Exception('Too many OTP requests. Please wait before trying again.');
+      } else if (response.statusCode == 500) {
+        // Server error
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['detail'] ?? 'Server error. Please try again later.');
+        } catch (e) {
+          throw Exception('Server error. Please try again later.');
+        }
+      } else {
+        // Other errors
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['detail'] ?? 'Failed to resend OTP');
+        } catch (e) {
+          throw Exception('Failed to resend OTP');
+        }
+      }
+    } on SocketException {
+      print('❌ Network error: No internet connection');
+      throw Exception('No internet connection. Please check your network.');
+    } on http.ClientException {
+      print('❌ Network error: Client exception');
+      throw Exception('Network error. Please try again.');
+    } catch (e) {
+      print('❌ Resend OTP error: $e');
+      rethrow;
     }
   }
 

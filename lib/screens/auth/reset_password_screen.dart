@@ -13,7 +13,6 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  final TextEditingController tokenCtrl = TextEditingController();
   final TextEditingController newPasswordCtrl = TextEditingController();
   final TextEditingController confirmPasswordCtrl = TextEditingController();
 
@@ -23,7 +22,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   void dispose() {
-    tokenCtrl.dispose();
     newPasswordCtrl.dispose();
     confirmPasswordCtrl.dispose();
     super.dispose();
@@ -101,32 +99,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  'Enter the token from your email',
+                                  'Enter your new password',
                                   style: TextStyle(color: Colors.white70),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 24),
-                                TextField(
-                                  controller: tokenCtrl,
-                                  style: const TextStyle(color: Colors.white),
-                                  decoration: InputDecoration(
-                                    labelText: 'Reset Token',
-                                    labelStyle:
-                                        const TextStyle(color: Colors.white70),
-                                    filled: true,
-                                    fillColor:
-                                        Colors.white.withValues(alpha: 0.15),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.confirmation_number,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
                                 TextField(
                                   controller: newPasswordCtrl,
                                   obscureText: _obscureNewPassword,
@@ -248,11 +225,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Future<void> _resetPassword() async {
-    final token = tokenCtrl.text.trim();
     final newPassword = newPasswordCtrl.text.trim();
     final confirmPassword = confirmPasswordCtrl.text.trim();
 
-    if (token.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+    if (newPassword.isEmpty || confirmPassword.isEmpty) {
       _showSnack('Please fill all fields');
       return;
     }
@@ -280,7 +256,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     setState(() => loading = true);
 
     try {
-      await AuthService.resetPassword(token, newPassword);
+      // Call resetPassword with only the new password
+      // Token is internally handled by AuthService
+      await AuthService.resetPassword(newPassword);
 
       if (!mounted) return;
 

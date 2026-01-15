@@ -3,7 +3,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import 'reset_password_screen.dart';
+import 'login_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -191,24 +191,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => loading = true);
 
     try {
+      // Call the API - this will throw exception if it fails
       await AuthService.requestPasswordReset(email);
 
       if (!mounted) return;
 
       setState(() => loading = false);
 
-      // Show success dialog and navigate to reset screen
+      // Show success dialog ONLY if email was actually sent (no exception thrown)
       _showCompactDialog(
-        title: 'Success',
-        message: 'Password reset link sent to your email.',
+        title: 'Email Sent',
+        message: 'Password reset link has been sent to your email. Please check your inbox.',
         icon: Icons.check_circle_outline,
         iconColor: Colors.green,
         onOkPressed: () {
           Navigator.of(context).pop(); // Close dialog
+          // Navigate back to Login screen
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => const ResetPasswordScreen(),
+              builder: (_) => const LoginScreen(),
             ),
           );
         },
@@ -220,18 +222,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
         final errorMessage = e.toString().toLowerCase();
         
-        // Check if email is not registered (404 or specific error message)
+        // Handle specific error cases
         if (errorMessage.contains('not found') ||
             errorMessage.contains('not registered') ||
             errorMessage.contains('does not exist') ||
             errorMessage.contains('404')) {
           _showCompactDialog(
             title: 'Email Not Found',
-            message: 'Entered email is not registered.',
+            message: 'This email is not registered. Please check and try again.',
             icon: Icons.info_outline,
             iconColor: Colors.blue,
           );
+        } else if (errorMessage.contains('500') ||
+                   errorMessage.contains('failed to send') ||
+                   errorMessage.contains('email service') ||
+                   errorMessage.contains('smtp')) {
+          _showCompactDialog(
+            title: 'Email Sending Failed',
+            message: 'Unable to send reset email at this time. Please try again later or contact support.',
+            icon: Icons.error_outline,
+            iconColor: Colors.red,
+          );
+        } else if (errorMessage.contains('network') ||
+                   errorMessage.contains('connection') ||
+                   errorMessage.contains('timeout')) {
+          _showCompactDialog(
+            title: 'Network Error',
+            message: 'Please check your internet connection and try again.',
+            icon: Icons.wifi_off,
+            iconColor: Colors.orange,
+          );
         } else {
+          // Generic error
           _showCompactDialog(
             title: 'Error',
             message: e.toString().replaceAll('Exception: ', ''),

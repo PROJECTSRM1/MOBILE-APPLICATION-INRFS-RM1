@@ -1,3 +1,5 @@
+// lib/services/api_service.dart
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -106,10 +108,8 @@ class ApiService {
         print('✅ OTP resent successfully');
         return data;
       } else if (response.statusCode == 404) {
-        // User not found
         throw Exception('Email not registered');
       } else if (response.statusCode == 400) {
-        // Bad request
         try {
           final error = jsonDecode(response.body);
           throw Exception(error['detail'] ?? 'Invalid request');
@@ -117,7 +117,6 @@ class ApiService {
           throw Exception('Failed to resend OTP');
         }
       } else if (response.statusCode == 422) {
-        // Validation error
         try {
           final error = jsonDecode(response.body);
           throw Exception(error['detail'] ?? 'Invalid email format');
@@ -125,10 +124,8 @@ class ApiService {
           throw Exception('Invalid email format');
         }
       } else if (response.statusCode == 429) {
-        // Too many requests
         throw Exception('Too many OTP requests. Please wait before trying again.');
       } else if (response.statusCode == 500) {
-        // Server error
         try {
           final error = jsonDecode(response.body);
           throw Exception(error['detail'] ?? 'Server error. Please try again later.');
@@ -136,7 +133,6 @@ class ApiService {
           throw Exception('Server error. Please try again later.');
         }
       } else {
-        // Other errors
         try {
           final error = jsonDecode(response.body);
           throw Exception(error['detail'] ?? 'Failed to resend OTP');
@@ -157,29 +153,154 @@ class ApiService {
   }
 
   // ===========================
-  // GET USER DETAILS
+  // GET USER DETAILS BY INV_REG_ID
   // ===========================
   static Future<Map<String, dynamic>> getUserDetails({
-    required String userId,
+    required String invRegId,
     required String token,
   }) async {
-    final Uri url = Uri.parse('$baseUrl/users/$userId');
+    final Uri url = Uri.parse('$baseUrl/users/$invRegId');
 
-    print('🔍 Fetching user details: $url');
+    print('🔍 Fetching user details for inv_reg_id: $invRegId');
+    print('🔍 Request URL: $url');
 
-    final response = await http.get(
-      url,
-      headers: _headers(token: token),
-    );
+    try {
+      final response = await http.get(
+        url,
+        headers: _headers(token: token),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please try again.');
+        },
+      );
 
-    print('📥 Response Status: ${response.statusCode}');
-    print('📥 Response Body: ${response.body}');
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Body: ${response.body}');
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Failed to fetch user details');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ User details fetched successfully');
+        return data;
+      } else if (response.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to fetch user details');
+      }
+    } on SocketException {
+      print('❌ Network error: No internet connection');
+      throw Exception('No internet connection');
+    } catch (e) {
+      print('❌ Get user details error: $e');
+      rethrow;
+    }
+  }
+
+  // ===========================
+  // UPDATE USER DETAILS
+  // ===========================
+  static Future<Map<String, dynamic>> updateUserDetails({
+    required String invRegId,
+    required String token,
+    String? firstName,
+    String? lastName,
+    String? mobile,
+    int? genderId,
+    String? dob,
+  }) async {
+    final Uri url = Uri.parse('$baseUrl/users/$invRegId');
+
+    final Map<String, dynamic> body = {};
+    if (firstName != null) body['first_name'] = firstName;
+    if (lastName != null) body['last_name'] = lastName;
+    if (mobile != null) body['mobile'] = mobile;
+    if (genderId != null) body['gender_id'] = genderId;
+    if (dob != null) body['dob'] = dob;
+
+    print('🔍 Updating user details for inv_reg_id: $invRegId');
+    print('📤 Request body: ${jsonEncode(body)}');
+
+    try {
+      final response = await http.put(
+        url,
+        headers: _headers(token: token),
+        body: jsonEncode(body),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please try again.');
+        },
+      );
+
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ User details updated successfully');
+        return data;
+      } else if (response.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to update user details');
+      }
+    } on SocketException {
+      print('❌ Network error: No internet connection');
+      throw Exception('No internet connection');
+    } catch (e) {
+      print('❌ Update user details error: $e');
+      rethrow;
+    }
+  }
+
+  // ===========================
+  // DELETE USER ACCOUNT
+  // ===========================
+  static Future<Map<String, dynamic>> deleteUserAccount({
+    required String invRegId,
+    required String token,
+  }) async {
+    final Uri url = Uri.parse('$baseUrl/users/$invRegId');
+
+    print('🔍 Deleting user account for inv_reg_id: $invRegId');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: _headers(token: token),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please try again.');
+        },
+      );
+
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('✅ User account deleted successfully');
+        return {'message': 'Account deleted successfully'};
+      } else if (response.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please login again.');
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to delete account');
+      }
+    } on SocketException {
+      print('❌ Network error: No internet connection');
+      throw Exception('No internet connection');
+    } catch (e) {
+      print('❌ Delete account error: $e');
+      rethrow;
     }
   }
 

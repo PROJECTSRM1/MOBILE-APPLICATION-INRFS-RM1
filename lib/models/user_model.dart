@@ -1,25 +1,3 @@
-// class UserModel {
-//   final String name;
-//   final String email;
-//   final String mobile;
-//   final String customerId;
-
-//   const UserModel({
-//     required this.name,
-//     required this.email,
-//     required this.mobile,
-//     required this.customerId,
-//   });
-// }
-
-
-
-
-
-
-
-
-
 // lib/models/user_model.dart
 
 class UserModel {
@@ -112,6 +90,19 @@ class UserModel {
       return name![0].toUpperCase();
     }
     return email[0].toUpperCase();
+  }
+
+  String get genderDisplay {
+    switch (genderId) {
+      case 1:
+        return 'Male';
+      case 2:
+        return 'Female';
+      case 3:
+        return 'Other';
+      default:
+        return 'Not specified';
+    }
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {

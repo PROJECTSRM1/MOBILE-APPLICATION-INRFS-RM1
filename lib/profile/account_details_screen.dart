@@ -402,7 +402,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                     _buildFieldLabel('Gender'),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<int>(
-                      value: _selectedGenderId,
+                      initialValue: _selectedGenderId,
                       decoration: _buildInputDecoration(
                         icon: Icons.wc_outlined,
                         hint: 'Select gender',

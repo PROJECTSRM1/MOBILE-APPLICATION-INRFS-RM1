@@ -122,7 +122,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Receive updates and alerts',
                       style: TextStyle(fontSize: 13),
                     ),
-                    activeColor: const Color(0xFFB87A3D),
+                    
+                    activeThumbColor: const Color(0xFFB87A3D),
                   ),
                   if (_notificationsEnabled) ...[
                     const Divider(height: 1),
@@ -136,7 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Email Notifications',
                         style: TextStyle(fontSize: 15),
                       ),
-                      activeColor: const Color(0xFFB87A3D),
+                      activeThumbColor: const Color(0xFFB87A3D),
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
@@ -149,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Push Notifications',
                         style: TextStyle(fontSize: 15),
                       ),
-                      activeColor: const Color(0xFFB87A3D),
+                      activeThumbColor: const Color(0xFFB87A3D),
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
@@ -162,7 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'SMS Notifications',
                         style: TextStyle(fontSize: 15),
                       ),
-                      activeColor: const Color(0xFFB87A3D),
+                      activeThumbColor: const Color(0xFFB87A3D),
                     ),
                   ],
                 ],

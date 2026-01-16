@@ -410,7 +410,7 @@ class _BankDetailsScreenState extends State<BankDetailsScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
-                  value: _selectedBankId,
+                  initialValue: _selectedBankId,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(
                       Icons.account_balance,

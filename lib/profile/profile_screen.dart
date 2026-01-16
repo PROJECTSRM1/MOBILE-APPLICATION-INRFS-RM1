@@ -180,18 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        foregroundColor: Colors.black,
-      ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

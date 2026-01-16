@@ -69,8 +69,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
     final investments = InvestmentStore.investments;
 
     return Scaffold(
-      appBar: AppBar(
-      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : investments.isEmpty

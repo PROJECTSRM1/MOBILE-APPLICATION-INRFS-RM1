@@ -9,14 +9,6 @@ class BondsScreen extends StatelessWidget {
     final bonds = InvestmentStore.bonds; // ✅ single source of truth
 
     return Scaffold(
-      appBar: AppBar(
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back),
-        //   onPressed: () {
-        //     Navigator.pop(context); // ⬅ back to dashboard
-        //   },
-        // ),
-      ),
       body: bonds.isEmpty ? _emptyState() : _bondList(bonds),
     );
   }

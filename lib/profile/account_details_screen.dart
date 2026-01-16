@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../services/profile_service.dart';
+import '../services/auth_service.dart';
 
 class AccountDetailsScreen extends StatefulWidget {
   final String token;
+  final String invRegId;
   final UserModel userProfile;
 
   const AccountDetailsScreen({
     super.key,
     required this.token,
+    required this.invRegId,
     required this.userProfile,
   });
 
@@ -27,14 +30,19 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
   late TextEditingController _mobileController;
+  late TextEditingController _dobController;
   
+  int? _selectedGenderId;
   bool _isEditing = false;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _profileService = ProfileService(authToken: widget.token);
+    _profileService = ProfileService(
+      authToken: widget.token,
+      invRegId: widget.invRegId,
+    );
     
     _firstNameController = TextEditingController(
       text: widget.userProfile.firstName ?? widget.userProfile.displayFirstName
@@ -44,6 +52,8 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
     );
     _emailController = TextEditingController(text: widget.userProfile.email);
     _mobileController = TextEditingController(text: widget.userProfile.mobile);
+    _dobController = TextEditingController(text: widget.userProfile.dob ?? '');
+    _selectedGenderId = widget.userProfile.genderId;
   }
 
   @override
@@ -52,6 +62,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
@@ -62,9 +73,12 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
 
     try {
       await _profileService.updateUserProfile(
+        invRegId: widget.invRegId,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         mobile: _mobileController.text.trim(),
+        genderId: _selectedGenderId,
+        dob: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
       );
 
       if (mounted) {
@@ -103,7 +117,120 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
       _firstNameController.text = widget.userProfile.firstName ?? widget.userProfile.displayFirstName;
       _lastNameController.text = widget.userProfile.lastName ?? widget.userProfile.displayLastName;
       _mobileController.text = widget.userProfile.mobile;
+      _dobController.text = widget.userProfile.dob ?? '';
+      _selectedGenderId = widget.userProfile.genderId;
     });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? initialDate;
+    if (_dobController.text.isNotEmpty) {
+      try {
+        initialDate = DateTime.parse(_dobController.text);
+      } catch (e) {
+        initialDate = null;
+      }
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime(2000),
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFB87A3D),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dobController.text = picked.toString().split(' ')[0];
+      });
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 12),
+            const Text(
+              'Delete Account',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isSaving = true);
+
+      try {
+        await _profileService.deleteUserAccount(invRegId: widget.invRegId);
+
+        if (mounted) {
+          AuthService.logout();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        }
+      } catch (e) {
+        print('Error deleting account: $e');
+        if (mounted) {
+          setState(() => _isSaving = false);
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete account: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -269,53 +396,44 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                         return null;
                       },
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-              // Account Information
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 4),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Account Information',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    // Gender
+                    _buildFieldLabel('Gender'),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int>(
+                      value: _selectedGenderId,
+                      decoration: _buildInputDecoration(
+                        icon: Icons.wc_outlined,
+                        hint: 'Select gender',
                       ),
+                      items: const [
+                        DropdownMenuItem(value: 1, child: Text('Male')),
+                        DropdownMenuItem(value: 2, child: Text('Female')),
+                        DropdownMenuItem(value: 3, child: Text('Other')),
+                      ],
+                      onChanged: _isEditing ? (value) {
+                        setState(() => _selectedGenderId = value);
+                      } : null,
                     ),
                     const SizedBox(height: 16),
-                    if (widget.userProfile.invRegId != null)
-                      _buildInfoRow(
-                        'Investor ID',
-                        widget.userProfile.invRegId!,
+
+                    // Date of Birth
+                    _buildFieldLabel('Date of Birth'),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _dobController,
+                      enabled: _isEditing,
+                      readOnly: true,
+                      onTap: _isEditing ? () => _selectDate(context) : null,
+                      decoration: _buildInputDecoration(
+                        icon: Icons.calendar_today_outlined,
+                        hint: 'Select date of birth',
+                      ).copyWith(
+                        suffixIcon: _isEditing
+                            ? const Icon(Icons.calendar_today, color: Color(0xFFB87A3D))
+                            : null,
                       ),
-                    if (widget.userProfile.createdAt != null) ...[
-                      const SizedBox(height: 12),
-                      _buildInfoRow(
-                        'Member Since',
-                        '${widget.userProfile.createdAt!.day}/${widget.userProfile.createdAt!.month}/${widget.userProfile.createdAt!.year}',
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Email Verified',
-                      widget.userProfile.isEmailVerified == true ? 'Yes' : 'No',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Mobile Verified',
-                      widget.userProfile.isMobileVerified == true ? 'Yes' : 'No',
                     ),
                   ],
                 ),
@@ -378,6 +496,44 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 32),
+              ],
+
+              // Delete Account Button
+              if (!_isEditing) ...[
+                const Divider(height: 32),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isSaving ? null : _handleDeleteAccount,
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    label: const Text(
+                      'Delete Account',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Permanently delete your account and all associated data',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ],
           ),
@@ -418,28 +574,6 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
         borderSide: BorderSide(color: Colors.grey[200]!),
       ),
       hintText: hint,
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 }

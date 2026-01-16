@@ -35,8 +35,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = widget.token ?? AuthService.accessToken;
 
     if (token != null) {
-      _profileService = ProfileService(authToken: token);
+      _profileService = ProfileService(
+        authToken: token,
+        invRegId: widget.user?.invRegId,
+      );
       _userProfile = widget.user;
+      
+      // Fetch fresh user data if we have inv_reg_id
+      if (widget.user?.invRegId != null) {
+        _refreshUserProfile();
+      }
+    }
+  }
+
+  Future<void> _refreshUserProfile() async {
+    if (widget.user?.invRegId == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final updatedProfile = await _profileService.getUserProfile(
+        invRegId: widget.user!.invRegId!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _userProfile = updatedProfile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error refreshing profile: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -73,25 +105,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _navigateToAccountDetails() async {
     final token = widget.token ?? AuthService.accessToken;
-    if (token == null || _userProfile == null) return;
+    if (token == null || _userProfile == null || _userProfile!.invRegId == null) {
+      _showSnack('Unable to load account details');
+      return;
+    }
 
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AccountDetailsScreen(
           token: token,
+          invRegId: _userProfile!.invRegId!,
           userProfile: _userProfile!,
         ),
       ),
     );
 
     if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Refresh profile after update
+      _refreshUserProfile();
     }
   }
 
@@ -127,6 +159,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       MaterialPageRoute(
         builder: (_) => const AboutUsScreen(),
       ),
+    );
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
     );
   }
 
@@ -203,16 +241,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (_userProfile?.invRegId != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'ID: ${_userProfile!.invRegId}',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),

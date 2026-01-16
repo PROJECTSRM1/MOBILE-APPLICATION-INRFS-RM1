@@ -13,6 +13,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+    dio: ^5.4.0
+file_picker: ^8.0.0
+
 
   # UI & Core
   cupertino_icons: ^1.0.6

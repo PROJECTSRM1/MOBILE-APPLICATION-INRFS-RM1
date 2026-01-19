@@ -13,17 +13,22 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    dio: ^5.4.0
-file_picker: ^8.0.0
 
+  # Networking
+  http: ^1.2.0
+  dio: ^5.4.0
+  http_parser: ^4.0.2
+
+  # File picker
+  file_picker: ^8.0.0
 
   # UI & Core
   cupertino_icons: ^1.0.6
   fl_chart: ^1.1.1
   url_launcher: ^6.3.2
-  http: ^1.2.0
   shared_preferences: ^2.2.2
   intl: ^0.18.1
+
   # PDF & File handling
   pdf: ^3.10.7
   path_provider: ^2.1.2
@@ -35,10 +40,7 @@ file_picker: ^8.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^3.0.0
-
-  # App icon generator (DEV ONLY)
   flutter_launcher_icons: ^0.13.1
 
 # -------------------------
@@ -54,6 +56,5 @@ flutter_icons:
 # -------------------------
 flutter:
   uses-material-design: true
-
   assets:
     - assets/images/

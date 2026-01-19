@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/investment_store.dart';
+import 'package:open_filex/open_filex.dart';
+
 
 class BondsScreen extends StatelessWidget {
   const BondsScreen({super.key});
@@ -76,7 +78,10 @@ class BondsScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: OutlinedButton.icon(
-                   onPressed: null, // disabled until implemented
+                    onPressed: () {
+                      OpenFilex.open(bond.filePath);
+                    },
+                    // disabled until implemented
 
                     icon: const Icon(Icons.download),
                     label: const Text('Download Bond'),

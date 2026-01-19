@@ -1,26 +1,10 @@
 import '../models/investment.dart';
-import '../models/bond_model.dart';
+import '../models/bond.dart';
 
 class InvestmentStore {
-  static final List<Investment> investments = [];
+  /// All investments
+  static List<Investment> investments = [];
 
-  /// BONDS (Derived)
-  static List<BondModel> get bonds {
-    return investments.map((i) {
-      return BondModel(
-        bondId: i.investmentId,
-        planName: i.planName,
-        investedAmount: i.investedAmount,
-        maturityValue: i.maturityValue,
-        tenure: i.tenure,
-        interest: i.interest,
-        status: i.status, // ✅ FIXED
-        date: i.date.toIso8601String().split('T').first,
-      );
-    }).toList();
-  }
-
-  /// RECENT INVESTMENTS
-  static List<Investment> get recent =>
-      investments.take(5).toList();
+  /// Generated bonds (PDF based)
+  static List<Bond> bonds = [];
 }

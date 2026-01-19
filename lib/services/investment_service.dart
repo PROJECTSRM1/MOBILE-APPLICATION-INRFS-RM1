@@ -1,128 +1,47 @@
-// import 'dart:convert';
-// import 'package:http/http.dart' as http;
-
-// class InvestmentService {
-//   static const String baseUrl = 'https://inrfs-be.onrender.com';
-
-//   static Future<void> postInvestment({
-//     required String token,
-//     required double amount,
-//     required int planId,
-//     required String maturityDate,
-//   }) async {
-//     final response = await http.post(
-//       Uri.parse('$baseUrl/investments/'),
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Accept': 'application/json',
-//         'Authorization': 'Bearer $token', // 🔥 IMPORTANT
-//       },
-//       body: jsonEncode({
-//         'principal_amount': amount,
-//         'plan_type_id': planId,
-//         'maturity_date': maturityDate,
-//       }),
-//     );
-
-//     if (response.statusCode != 200 &&
-//         response.statusCode != 201) {
-//       final error = jsonDecode(response.body);
-//       throw Exception(
-//         error['detail'] ?? 'Failed to save investment',
-//       );
-//     }
-//   }
-// }
-
-
-
-
-
-
-
-
-
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class InvestmentService {
   static const String baseUrl = 'https://inrfs-be.onrender.com';
 
-  static Map<String, String> _headers({required String token}) => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+  /* ---------------- CREATE INVESTMENT + BOND ---------------- */
 
-  /// POST INVESTMENT
-  static Future<Map<String, dynamic>> postInvestment({
+  static Future<Map<String, dynamic>> createInvestmentWithBond({
     required String token,
-    required double amount,
-    required int planId,
+    required double principalAmount,
+    required int planTypeId,
     required String maturityDate,
+    required File bondFile,
   }) async {
-    final Uri url = Uri.parse('$baseUrl/investments/');
+    final uri = Uri.parse('$baseUrl/investments/');
 
-    final response = await http.post(
-      url,
-      headers: _headers(token: token),
-      body: jsonEncode({
-        "plan_id": planId,
-        "invested_amount": amount,
-        "maturity_date": maturityDate,
-      }),
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields.addAll({
+      'principal_amount': principalAmount.toStringAsFixed(0),
+      'plan_type_id': planTypeId.toString(),
+      'maturity_date': maturityDate,
+    });
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'upload_file',
+        bondFile.path,
+        contentType: MediaType('application', 'pdf'),
+      ),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Failed to create investment');
+    final response = await request.send();
+    final body = await response.stream.bytesToString();
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(body);
     }
-  }
 
-  /// GET MY INVESTMENTS
-  static Future<List<dynamic>> getMyInvestments({
-    required String token,
-  }) async {
-    final Uri url = Uri.parse('$baseUrl/investments/my');
-
-    final response = await http.get(
-      url,
-      headers: _headers(token: token),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data;
-      } else if (data is Map && data.containsKey('investments')) {
-        return data['investments'] as List<dynamic>;
-      }
-      return [];
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Failed to fetch investments');
-    }
-  }
-
-  /// WITHDRAW INVESTMENT
-  static Future<Map<String, dynamic>> withdrawInvestment({
-    required String token,
-    required String investmentId,
-  }) async {
-    final Uri url = Uri.parse('$baseUrl/investments/$investmentId/withdraw');
-
-    final response = await http.post(
-      url,
-      headers: _headers(token: token),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Failed to withdraw investment');
-    }
+    return jsonDecode(body);
   }
 }

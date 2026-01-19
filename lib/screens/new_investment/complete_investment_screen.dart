@@ -1,11 +1,12 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 
-import '../../models/investment.dart';
 import '../../services/investment_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/bond_pdf_generator.dart';
+import '../../data/investment_store.dart';
+import '../../models/bond.dart';
 
 class CompleteInvestmentScreen extends StatefulWidget {
   final int planId;
@@ -32,9 +33,7 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
   double totalMaturity = 0;
   bool agreed = false;
 
-  // ✅ Bank transfer proof file
-  File? selectedProofFile;
-  String? selectedFileName;
+  /* ---------------- CALCULATION ---------------- */
 
   void _calculate() {
     investmentAmount = double.tryParse(_amountController.text) ?? 0;
@@ -43,49 +42,18 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     setState(() {});
   }
 
-  // ✅ Pick proof screenshot/pdf file
-  Future<void> _pickProofFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ["jpg", "jpeg", "png", "pdf"],
-    );
-
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        selectedProofFile = File(result.files.single.path!);
-        selectedFileName = result.files.single.name;
-      });
-    }
-  }
-
-  void _showTermsDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Terms & Conditions'),
-        content: const Text(
-          '1. Investment is locked for the selected tenure period.\n'
-          '2. Returns are calculated based on the fixed interest rate.\n'
-          '3. Digital bond will be issued after payment confirmation.\n'
-          '4. Early withdrawal may incur penalties.\n'
-          '5. Maturity amount will be credited to your account.',
-          style: TextStyle(fontSize: 12),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
+  /* ---------------- PAYMENT SHEET ---------------- */
 
   void _showPaymentSheet() {
+    if (investmentAmount <= 0) {
+      _showError('Enter a valid investment amount');
+      return;
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
+barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (_) => Center(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -105,26 +73,30 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
-                // ✅ Payment info
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEAF2FB),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     children: [
-                      _paymentInfoRow('Plan Type', widget.planName),
-                      _paymentInfoRow(
+                      _paymentRow('Plan Type', widget.planName),
+                      const SizedBox(height: 6),
+                      _paymentRow(
                         'Amount to Pay',
                         '₹${investmentAmount.toStringAsFixed(0)}',
                         bold: true,
                       ),
-                      _paymentInfoRow(
+                      const SizedBox(height: 6),
+                      _paymentRow(
                         'Expected Returns',
                         '₹${expectedReturns.toStringAsFixed(0)}',
                         valueColor: Colors.green,
@@ -133,44 +105,42 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 22),
 
-                // ❌ Stripe (disabled)
-                _paymentMethodButton(
+                _paymentOptionButton(
                   icon: Icons.credit_card,
-                  label: 'Pay with Stripe (Coming Soon)',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Stripe coming soon")),
-                    );
-                  },
+                  label: 'Pay with Stripe',
+                  onTap: _confirmPayment,
                 ),
-
-                // ❌ PayPal (disabled)
-                _paymentMethodButton(
+                const SizedBox(height: 12),
+                _paymentOptionButton(
                   icon: Icons.account_balance_wallet,
-                  label: 'Pay with PayPal (Coming Soon)',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("PayPal coming soon")),
-                    );
-                  },
+                  label: 'Pay with PayPal',
+                  onTap: _confirmPayment,
                 ),
-
-                // ✅ Bank Transfer
-                _paymentMethodButton(
+                const SizedBox(height: 12),
+                _paymentOptionButton(
                   icon: Icons.account_balance,
                   label: 'Bank Transfer',
-                  onPressed: _submitBankTransferInvestment,
+                  onTap: _confirmPayment,
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
 
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFB57B3A)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Color(0xFFB57B3A)),
+                    ),
                   ),
                 ),
               ],
@@ -181,19 +151,10 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     );
   }
 
-  // ✅ Bank Transfer Submit (Fixed fields + file upload)
-  Future<void> _submitBankTransferInvestment() async {
-    Navigator.pop(context); // close payment sheet
+  /* ---------------- CONFIRM PAYMENT ---------------- */
 
-    if (investmentAmount <= 0) {
-      _showError("Enter a valid investment amount");
-      return;
-    }
-
-    if (selectedProofFile == null) {
-      _showError("Please upload bank transfer proof before submitting.");
-      return;
-    }
+  Future<void> _confirmPayment() async {
+    Navigator.pop(context);
 
     showDialog(
       context: context,
@@ -202,54 +163,64 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     );
 
     try {
-      final token = AuthService.accessToken;
-      if (token == null) {
-        throw Exception('User not authenticated. Please login again.');
-      }
+      final token = AuthService.accessToken!;
+      final maturityDate =
+          DateTime.now().add(const Duration(days: 365)).toIso8601String().split('T')[0];
 
-      final maturityDate = DateTime.now()
-          .add(const Duration(days: 365))
-          .toIso8601String()
-          .split('T')[0];
+      final bondId = 'BOND-${DateTime.now().millisecondsSinceEpoch}';
 
-      // ✅ API CALL (multipart/form-data)
-      await InvestmentService.createInvestmentBankTransfer(
+      final bondFile = await BondPdfGenerator.generate(
+        bondId: bondId,
+        investorName: 'Investor',
+        planName: widget.planName,
+        amount: investmentAmount,
+        interestRate: '${widget.interestRate}%',
+        issueDate: DateTime.now(),
+        maturityDate: DateTime.now().add(const Duration(days: 365)),
+      );
+
+      await InvestmentService.createInvestmentWithBond(
         token: token,
         principalAmount: investmentAmount,
         planTypeId: widget.planId,
         maturityDate: maturityDate,
-        uploadFile: selectedProofFile!,
+        bondFile: bondFile,
+      );
+
+      InvestmentStore.bonds.add(
+        Bond(
+          bondId: bondId,
+          planName: widget.planName,
+          investedAmount: investmentAmount,
+          maturityValue: totalMaturity,
+          tenure: '365 Days',
+          interest: '${widget.interestRate}%',
+          status: 'Active',
+          date: maturityDate,
+          filePath: bondFile.path,
+        ),
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // close loader
+      Navigator.pop(context);
 
-      final investment = Investment(
-        investmentId: 'INV-${DateTime.now().millisecondsSinceEpoch}',
-        planName: widget.planName,
-        investedAmount: investmentAmount,
-        returns: expectedReturns,
-        maturityValue: totalMaturity,
-        tenure: '365 Days',
-        interest: '${widget.interestRate}%',
-        isActive: true,
-        status: 'Pending Verification', // ✅ Bank transfer
-        date: DateTime.now(),
-      );
-
-      _showSuccessDialog(investment);
+      await OpenFilex.open(bondFile.path);
+      if (!mounted) return;
+      Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
-      Navigator.pop(context); // close loader
+      Navigator.pop(context);
       _showError(e.toString());
     }
   }
+
+  /* ---------------- ERROR ---------------- */
 
   void _showError(String msg) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Payment Failed'),
+        title: const Text('Error'),
         content: Text(msg),
         actions: [
           TextButton(
@@ -261,93 +232,56 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     );
   }
 
-  void _showSuccessDialog(Investment investment) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text('Submitted Successfully ✅'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, size: 60, color: Colors.green),
-            const SizedBox(height: 12),
-            Text(
-              '₹${investment.investedAmount.toStringAsFixed(0)} submitted successfully.\n\nStatus: Pending Verification',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
-            child: const Text('View Investments'),
-          ),
-        ],
-      ),
-    );
-  }
+  /* ---------------- UI ---------------- */
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Investment')),
+      backgroundColor: const Color(0xFFFFF1DE),
+      appBar: AppBar(
+        title: const Text('Complete Your Investment'),
+        backgroundColor: const Color(0xFFFFF1DE),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _planInfo(),
+            _planChip(),
             const SizedBox(height: 24),
 
             const Text('Investment Amount'),
             const SizedBox(height: 6),
-
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
                 prefixText: '₹ ',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
               ),
               onChanged: (_) => _calculate(),
             ),
 
             const SizedBox(height: 20),
             _returnsCard(),
+            const SizedBox(height: 30),
+            _summarySection(),
             const SizedBox(height: 20),
-
-            // ✅ Upload proof UI
-            ElevatedButton.icon(
-              onPressed: _pickProofFile,
-              icon: const Icon(Icons.upload_file),
-              label: Text(
-                selectedFileName == null
-                    ? "Upload Bank Transfer Proof"
-                    : "Proof Selected ✅ ($selectedFileName)",
-              ),
-            ),
-
-            const SizedBox(height: 32),
-            _summary(),
-            const SizedBox(height: 20),
-
-            TextButton(
-              onPressed: _showTermsDialog,
-              child: const Text('Terms & Conditions'),
-            ),
 
             CheckboxListTile(
               value: agreed,
               onChanged: (v) => setState(() => agreed = v!),
               title: const Text('I agree to the Terms & Conditions'),
+              controlAffinity: ListTileControlAffinity.trailing,
             ),
 
-            const SizedBox(height: 24),
-
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
@@ -371,23 +305,69 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     );
   }
 
-  Widget _planInfo() => Container(
-        padding: const EdgeInsets.all(12),
+  /* ---------------- REUSABLE WIDGETS ---------------- */
+
+  Widget _planChip() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(8),
+          color: const Color(0xFFE0F2FF),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           'Selected Plan: ${widget.planName}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
       );
+
+  Widget _paymentRow(String label, String value,
+      {bool bold = false, Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: const TextStyle(fontSize: 13, color: Colors.black54)),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: bold ? FontWeight.bold : FontWeight.w600,
+            color: valueColor ?? Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+Widget _paymentOptionButton({
+  required IconData icon,
+  required String label,
+  required VoidCallback onTap,
+}) {
+  return SizedBox(
+    width: double.infinity,
+    child: OutlinedButton.icon(
+      icon: Icon(icon, color: const Color(0xFFB57B3A)),
+      label: Text(
+        label,
+        style: const TextStyle(color: Color(0xFFB57B3A)),
+      ),
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Color(0xFFB57B3A)),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    ),
+  );
+}
 
   Widget _returnsCard() => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Colors.blue, Colors.indigo]),
-          borderRadius: BorderRadius.circular(12),
+          gradient:
+              const LinearGradient(colors: [Colors.blue, Colors.indigo]),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,10 +377,9 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
             Text(
               '₹${expectedReturns.toStringAsFixed(2)}',
               style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             Text(
               'Total Maturity: ₹${totalMaturity.toStringAsFixed(2)}',
@@ -410,7 +389,7 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
         ),
       );
 
-  Widget _summary() => Column(
+  Widget _summarySection() => Column(
         children: [
           _summaryRow('Plan Type', widget.planName),
           _summaryRow(
@@ -429,12 +408,8 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
         ],
       );
 
-  Widget _summaryRow(
-    String label,
-    String value, {
-    bool bold = false,
-    Color? valueColor,
-  }) {
+  Widget _summaryRow(String label, String value,
+      {bool bold = false, Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -444,63 +419,10 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
           Text(
             value,
             style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : null,
-              color: valueColor,
-            ),
+                fontWeight: bold ? FontWeight.bold : null,
+                color: valueColor),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _paymentInfoRow(
-    String label,
-    String value, {
-    bool bold = false,
-    Color? valueColor,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black54,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: bold ? FontWeight.w600 : FontWeight.w500,
-              color: valueColor ?? Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _paymentMethodButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          icon: Icon(icon, color: const Color(0xFFB57B3A)),
-          label: Text(label,
-              style: const TextStyle(color: Color(0xFFB57B3A))),
-          onPressed: onPressed,
-        ),
       ),
     );
   }

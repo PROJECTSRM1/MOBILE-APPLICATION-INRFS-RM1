@@ -9,8 +9,7 @@ class InvestmentsScreen extends StatefulWidget {
   const InvestmentsScreen({super.key});
 
   @override
-  State<InvestmentsScreen> createState() =>
-      _InvestmentsScreenState();
+  State<InvestmentsScreen> createState() => _InvestmentsScreenState();
 }
 
 class _InvestmentsScreenState extends State<InvestmentsScreen> {
@@ -22,6 +21,32 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
     _loadInvestments();
   }
 
+  // ✅ Convert "Plan 1" / "Plan 2" → "Short-Term Starter" / "Quaterly Builder"
+  String _getPlanName(String planName) {
+    final name = planName.trim();
+
+    // ✅ If already a proper name, return it
+    if (!name.toLowerCase().contains("plan")) return name;
+
+    // ✅ Extract number from "Plan 1", "Plan 2"
+    final numPart = name.replaceAll(RegExp(r'[^0-9]'), '');
+    final planId = int.tryParse(numPart) ?? 0;
+
+    // ✅ Map Plan ID → Plan Title
+    switch (planId) {
+      case 1:
+        return "Short-Term Starter";
+      case 2:
+        return "Quaterly Builder";
+      case 3:
+        return "Half-Year Growth";
+      case 4:
+        return "Yearly Wealth Plan";
+      default:
+        return "Unknown Plan";
+    }
+  }
+
   Future<void> _loadInvestments() async {
     final token = AuthService.accessToken;
 
@@ -30,9 +55,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
       debugPrint('❌ No auth token found');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please login again'),
-          ),
+          const SnackBar(content: Text('Please login again')),
         );
       }
       setState(() => loading = false);
@@ -40,23 +63,18 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
     }
 
     try {
-      final data =
-          await ApiService.getMyInvestments(token: token);
+      final data = await ApiService.getMyInvestments(token: token);
 
       InvestmentStore.investments
         ..clear()
-        ..addAll(
-          data.map((e) => Investment.fromApi(e)),
-        );
+        ..addAll(data.map((e) => Investment.fromApi(e)));
 
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('Load investments error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load investments'),
-          ),
+          const SnackBar(content: Text('Failed to load investments')),
         );
       }
     } finally {
@@ -64,25 +82,35 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final investments = InvestmentStore.investments;
+@override
+Widget build(BuildContext context) {
+  // ✅ Copy list first so we don't affect store directly
+  final investments = List<Investment>.from(InvestmentStore.investments);
 
-    return Scaffold(
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : investments.isEmpty
-              ? const Center(child: Text('No investments found'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: investments.length,
-                  itemBuilder: (context, index) {
-                    final i = investments[index];
-                    return _investmentCard(context, i);
-                  },
-                ),
-    );
-  }
+  // ✅ Sort latest first (descending)
+  // If investmentId is like INV0197, INV0196, this will work correctly
+  investments.sort((a, b) {
+    final aNum = int.tryParse(a.investmentId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final bNum = int.tryParse(b.investmentId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    return bNum.compareTo(aNum); // ✅ descending
+  });
+
+  return Scaffold(
+    body: loading
+        ? const Center(child: CircularProgressIndicator())
+        : investments.isEmpty
+            ? const Center(child: Text('No investments found'))
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: investments.length,
+                itemBuilder: (context, index) {
+                  final i = investments[index];
+                  return _investmentCard(context, i);
+                },
+              ),
+  );
+}
+
 
   // ================= Investment Card =================
 
@@ -109,11 +137,14 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
 
             const SizedBox(height: 10),
 
-            _row('Plan', i.planName),
+            // ✅ Updated plan name
+            _row('Plan', _getPlanName(i.planName)),
+
             _row(
               'Amount',
               '₹${i.investedAmount.toStringAsFixed(0)}',
             ),
+
             _row(
               'Returns',
               '₹${i.returns.toStringAsFixed(2)}',
@@ -145,12 +176,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
                           ),
                         ),
                         backgroundColor: i.isActive
-                            ? const Color.fromARGB(
-                                255, 235, 177, 54)
-                            : const Color.fromARGB(
-                                255, 228, 168, 240),
-                        visualDensity:
-                            VisualDensity.compact,
+                            ? const Color.fromARGB(255, 235, 177, 54)
+                            : const Color.fromARGB(255, 228, 168, 240),
+                        visualDensity: VisualDensity.compact,
                       ),
                     ),
                   ),
@@ -168,15 +196,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
                   width: 160,
                   height: 42,
                   child: ElevatedButton(
-                    onPressed: () =>
-                        _safeOpenDetails(context, i),
+                    onPressed: () => _safeOpenDetails(context, i),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color.fromARGB(
-                              255, 184, 122, 61),
+                      backgroundColor: const Color.fromARGB(255, 184, 122, 61),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: const Text(
@@ -231,25 +255,18 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
 
   // ================= SAFE NAVIGATION =================
 
-  void _safeOpenDetails(
-    BuildContext context,
-    Investment investment,
-  ) {
+  void _safeOpenDetails(BuildContext context, Investment investment) {
     try {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              InvestmentDetailsScreen(investment: investment),
+          builder: (_) => InvestmentDetailsScreen(investment: investment),
         ),
       );
     } catch (e) {
       debugPrint('Navigation error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Unable to open investment details'),
-        ),
+        const SnackBar(content: Text('Unable to open investment details')),
       );
     }
   }

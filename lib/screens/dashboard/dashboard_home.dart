@@ -28,10 +28,49 @@ class _DashboardHomeState extends State<DashboardHome> {
     _loadData();
   }
 
+  // ✅ Convert "Plan 1" / "Plan 2" → "Short-Term Starter" / "Quaterly Builder"
+  String _getPlanName(String planName) {
+    final name = planName.trim();
+
+    // ✅ If already a proper name, return it
+    if (!name.toLowerCase().contains("plan")) return name;
+
+    // ✅ Extract number from "Plan 1", "Plan 2"
+    final numPart = name.replaceAll(RegExp(r'[^0-9]'), '');
+    final planId = int.tryParse(numPart) ?? 0;
+
+    // ✅ Map Plan ID → Plan Title
+    switch (planId) {
+      case 1:
+        return "Short-Term Starter";
+      case 2:
+        return "Quaterly Builder";
+      case 3:
+        return "Half-Year Growth";
+      case 4:
+        return "Yearly Wealth Plan";
+      default:
+        return "Unknown Plan";
+    }
+  }
+
+  // ✅ Sort investments latest first using Investment ID (INV0197 > INV0196)
+  List<Investment> _getSortedInvestments(List<Investment> list) {
+    final sorted = List<Investment>.from(list);
+
+    sorted.sort((a, b) {
+      final aNum =
+          int.tryParse(a.investmentId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final bNum =
+          int.tryParse(b.investmentId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      return bNum.compareTo(aNum); // ✅ descending
+    });
+
+    return sorted;
+  }
+
   Future<void> _loadData() async {
     final token = AuthService.accessToken;
-
-    print('🔑 Token exists: ${token != null}');
 
     // Use the user data we already have from widget.user
     _userName = widget.user.displayFirstName;
@@ -48,14 +87,12 @@ class _DashboardHomeState extends State<DashboardHome> {
     try {
       // Fetch investments
       final investmentsData = await ApiService.getMyInvestments(token: token);
-      
+
       InvestmentStore.investments
         ..clear()
-        ..addAll(
-          investmentsData.map((e) => Investment.fromApi(e)),
-        );
+        ..addAll(investmentsData.map((e) => Investment.fromApi(e)));
 
-      print('✅ Found ${investmentsData.length} investments');
+      debugPrint('✅ Found ${investmentsData.length} investments');
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -80,7 +117,9 @@ class _DashboardHomeState extends State<DashboardHome> {
       );
     }
 
-    final List<Investment> investments = InvestmentStore.investments;
+    // ✅ Investments list sorted latest first
+    final List<Investment> investments =
+        _getSortedInvestments(InvestmentStore.investments);
 
     final double totalInvested = investments.fold(
       0,
@@ -106,20 +145,17 @@ class _DashboardHomeState extends State<DashboardHome> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _userName.isNotEmpty 
-                  ? 'Welcome Back, $_userName'
-                  : 'Welcome Back',
+                _userName.isNotEmpty ? 'Welcome Back, $_userName' : 'Welcome Back',
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
-              
               Text(
-                _customerId.isNotEmpty 
-                  ? 'Customer ID: $_customerId'
-                  : 'Customer ID: ${widget.user.invRegId ?? widget.user.customerId ?? ""}',
+                _customerId.isNotEmpty
+                    ? 'Customer ID: $_customerId'
+                    : 'Customer ID: ${widget.user.invRegId ?? widget.user.customerId ?? ""}',
                 style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 14,
@@ -185,6 +221,7 @@ class _DashboardHomeState extends State<DashboardHome> {
     );
   }
 
+  // ✅ Investment Card with Plan Name Mapping
   Widget _investmentCard(Investment investment) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -198,7 +235,7 @@ class _DashboardHomeState extends State<DashboardHome> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  investment.planName,
+                  _getPlanName(investment.planName), // ✅ show correct name
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

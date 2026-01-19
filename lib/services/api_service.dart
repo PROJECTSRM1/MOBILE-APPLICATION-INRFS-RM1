@@ -303,6 +303,55 @@ class ApiService {
       rethrow;
     }
   }
+// ===========================
+// DELETE INVESTMENT (WITHDRAW)
+// ===========================
+static Future<void> deleteInvestment({
+  required String ukInvId,
+  required String token,
+}) async {
+  final Uri url = Uri.parse('$baseUrl/investments/$ukInvId');
+
+  print('🗑️ Deleting investment: $ukInvId');
+  print('🔍 Request URL: $url');
+
+  try {
+    final response = await http.delete(
+      url,
+      headers: _headers(token: token),
+    ).timeout(
+      const Duration(seconds: 30),
+      onTimeout: () {
+        throw Exception('Request timeout. Please try again.');
+      },
+    );
+
+    print('📥 Delete Response Status: ${response.statusCode}');
+    print('📥 Delete Response Body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      print('✅ Investment deleted successfully');
+      return;
+    } else if (response.statusCode == 404) {
+      throw Exception('Investment not found');
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized. Please login again.');
+    } else {
+      try {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Failed to delete investment');
+      } catch (_) {
+        throw Exception('Failed to delete investment');
+      }
+    }
+  } on SocketException {
+    print('❌ Network error: No internet connection');
+    throw Exception('No internet connection');
+  } catch (e) {
+    print('❌ Delete investment error: $e');
+    rethrow;
+  }
+}
 
   // ===========================
   // CREATE INVESTMENT (POST)

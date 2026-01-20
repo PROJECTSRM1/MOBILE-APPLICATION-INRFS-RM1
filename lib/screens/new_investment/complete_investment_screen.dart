@@ -53,7 +53,7 @@ class _CompleteInvestmentScreenState extends State<CompleteInvestmentScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-barrierColor: Colors.black.withValues(alpha: 0.35),
+      barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (_) => Center(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -133,13 +133,18 @@ barrierColor: Colors.black.withValues(alpha: 0.35),
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFB57B3A)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: const Text(
                       'Cancel',
-                      style: TextStyle(color: Color(0xFFB57B3A)),
+                      style: TextStyle(
+                        color: Color(0xFFB57B3A),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -164,8 +169,10 @@ barrierColor: Colors.black.withValues(alpha: 0.35),
 
     try {
       final token = AuthService.accessToken!;
-      final maturityDate =
-          DateTime.now().add(const Duration(days: 365)).toIso8601String().split('T')[0];
+      final maturityDate = DateTime.now()
+          .add(const Duration(days: 365))
+          .toIso8601String()
+          .split('T')[0];
 
       final bondId = 'BOND-${DateTime.now().millisecondsSinceEpoch}';
 
@@ -205,6 +212,7 @@ barrierColor: Colors.black.withValues(alpha: 0.35),
       Navigator.pop(context);
 
       await OpenFilex.open(bondFile.path);
+
       if (!mounted) return;
       Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
@@ -319,67 +327,97 @@ barrierColor: Colors.black.withValues(alpha: 0.35),
         ),
       );
 
-  Widget _paymentRow(String label, String value,
-      {bool bold = false, Color? valueColor}) {
+  /// ✅ FIXED PAYMENT ROW (NEAT SMALL SIZE + BOLD + NO OVERFLOW)
+  Widget _paymentRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? valueColor,
+  }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 13, color: Colors.black54)),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-            color: valueColor ?? Colors.black,
+        Expanded(
+          flex: 4,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 6,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: bold ? 15 : 14, // ✅ reduced neatly
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                color: valueColor ?? Colors.black,
+              ),
+            ),
           ),
         ),
       ],
     );
   }
 
-Widget _paymentOptionButton({
-  required IconData icon,
-  required String label,
-  required VoidCallback onTap,
-}) {
-  return SizedBox(
-    width: double.infinity,
-    child: OutlinedButton.icon(
-      icon: Icon(icon, color: const Color(0xFFB57B3A)),
-      label: Text(
-        label,
-        style: const TextStyle(color: Color(0xFFB57B3A)),
-      ),
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: Color(0xFFB57B3A)),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+  Widget _paymentOptionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: Icon(icon, color: const Color(0xFFB57B3A)),
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFB57B3A),
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFB57B3A)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _returnsCard() => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient:
-              const LinearGradient(colors: [Colors.blue, Colors.indigo]),
+          gradient: const LinearGradient(
+            colors: [Colors.blue, Colors.indigo],
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Calculated Returns',
-                style: TextStyle(color: Colors.white70)),
+            const Text(
+              'Calculated Returns',
+              style: TextStyle(color: Colors.white70),
+            ),
             Text(
               '₹${expectedReturns.toStringAsFixed(2)}',
               style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             Text(
               'Total Maturity: ₹${totalMaturity.toStringAsFixed(2)}',
@@ -393,11 +431,15 @@ Widget _paymentOptionButton({
         children: [
           _summaryRow('Plan Type', widget.planName),
           _summaryRow(
-              'Investment Amount', '₹${investmentAmount.toStringAsFixed(0)}'),
+            'Investment Amount',
+            '₹${investmentAmount.toStringAsFixed(0)}',
+          ),
           _summaryRow('Interest Rate', '${widget.interestRate}%'),
-          _summaryRow('Expected Returns',
-              '₹${expectedReturns.toStringAsFixed(2)}',
-              valueColor: Colors.green),
+          _summaryRow(
+            'Expected Returns',
+            '₹${expectedReturns.toStringAsFixed(2)}',
+            valueColor: Colors.green,
+          ),
           const Divider(),
           _summaryRow(
             'Total Maturity Amount',
@@ -408,8 +450,12 @@ Widget _paymentOptionButton({
         ],
       );
 
-  Widget _summaryRow(String label, String value,
-      {bool bold = false, Color? valueColor}) {
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -419,8 +465,9 @@ Widget _paymentOptionButton({
           Text(
             value,
             style: TextStyle(
-                fontWeight: bold ? FontWeight.bold : null,
-                color: valueColor),
+              fontWeight: bold ? FontWeight.bold : null,
+              color: valueColor,
+            ),
           ),
         ],
       ),
